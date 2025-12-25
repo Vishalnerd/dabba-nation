@@ -1,0 +1,63 @@
+import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/validations";
+
+export async function POST(req: NextRequest) {
+  try {
+    // Rate limiting for login attempts (prevent brute force)
+    const clientIp = req.headers.get("x-forwarded-for") || "unknown";
+    const rateLimitCheck = checkRateLimit(clientIp + ":admin_login", 5, 60000); // 5 attempts per minute
+    
+    if (!rateLimitCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Too many login attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
+
+    const { username, password } = await req.json();
+
+    // Validate input
+    if (!username || !password || typeof username !== "string" || typeof password !== "string") {
+      return NextResponse.json(
+        { success: false, error: "Invalid credentials format" },
+        { status: 400 }
+      );
+    }
+
+    const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+    const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+
+    if (!ADMIN_USERNAME || !ADMIN_PASSWORD || !ADMIN_TOKEN) {
+      console.error("Admin environment variables not configured");
+      return NextResponse.json(
+        { success: false, error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      // Log successful admin login
+      console.log("[ADMIN LOGIN SUCCESS]", { ip: clientIp, timestamp: new Date().toISOString() });
+      
+      return NextResponse.json({
+        success: true,
+        token: ADMIN_TOKEN,
+      });
+    }
+
+    // Log failed login attempt
+    console.warn("[ADMIN LOGIN FAILED]", { ip: clientIp, username, timestamp: new Date().toISOString() });
+
+    return NextResponse.json(
+      { success: false, error: "Invalid credentials" },
+      { status: 401 }
+    );
+  } catch (err: any) {
+    console.error("Admin login error:", err);
+    return NextResponse.json(
+      { success: false, error: "Login failed" },
+      { status: 500 }
+    );
+  }
+}
