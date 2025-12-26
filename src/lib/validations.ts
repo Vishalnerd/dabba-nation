@@ -1,14 +1,7 @@
 // lib/validations.ts
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
 import Order from "@/models/Order";
-
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/dabba_nation";
-
-async function connectDB() {
-  if (mongoose.connection.readyState === 1) return;
-  await mongoose.connect(MONGODB_URI);
-}
+import connectDB from "@/lib/db";
 
 // ==================== PHONE & PINCODE VALIDATION ====================
 export function validatePhone(phone: string): boolean {
@@ -178,7 +171,7 @@ export function logAdminAction(
   };
 
   // In production, store this in a database
-  console.log("[ADMIN AUDIT]", JSON.stringify(logEntry));
+  console.log("🔒 [ADMIN AUDIT]", JSON.stringify(logEntry));
 }
 
 /**

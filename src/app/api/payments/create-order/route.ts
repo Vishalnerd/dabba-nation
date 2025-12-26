@@ -11,9 +11,10 @@ const razorpay = new Razorpay({
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate limiting
-    const clientIp = req.headers.get("x-forwarded-for") || "unknown";
-    const rateLimitCheck = checkRateLimit(clientIp, 10, 60000); // 10 payment orders per minute
+    const clientIp =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+
+    const rateLimitCheck = checkRateLimit(clientIp, 10, 60000);
     if (!rateLimitCheck.allowed) {
       return NextResponse.json(
         { success: false, error: "Too many payment requests. Please try again later." },
@@ -25,7 +26,6 @@ export async function POST(req: NextRequest) {
 
     const { orderId } = await req.json();
 
-    // Validate orderId
     if (!orderId || typeof orderId !== "string" || !orderId.startsWith("ORD-")) {
       return NextResponse.json(
         { success: false, error: "Invalid order ID" },
@@ -42,7 +42,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Prevent payment for already paid orders
     if (order.paymentStatus === "paid") {
       return NextResponse.json(
         { success: false, error: "Order already paid" },
@@ -50,7 +49,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate amount
     if (!order.totalAmount || order.totalAmount <= 0) {
       return NextResponse.json(
         { success: false, error: "Invalid order amount" },
@@ -58,18 +56,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check Razorpay configuration
-    if (!process.env.RAZORPAY_API_KEY || !process.env.RAZORPAY_API_SECRET) {
-      console.error("Razorpay credentials not configured");
-      return NextResponse.json(
-        { success: false, error: "Payment system configuration error" },
-        { status: 500 }
-      );
+    // 🔁 Idempotency: reuse existing Razorpay order
+    if (order.razorpay?.orderId) {
+      return NextResponse.json({
+        success: true,
+        razorpayOrderId: order.razorpay.orderId,
+        amount: order.totalAmount * 100,
+        currency: "INR",
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      });
     }
 
-    // Create Razorpay order
     const razorpayOrder = await razorpay.orders.create({
-      amount: order.totalAmount * 100, // Convert to paise
+      amount: order.totalAmount * 100,
       currency: "INR",
       receipt: order.orderId,
       notes: {
@@ -78,11 +77,16 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Log payment order creation
-    console.log("[PAYMENT ORDER CREATED]", { 
-      orderId, 
+    // ✅ Save Razorpay order ID for webhook matching
+    await Order.findOneAndUpdate(
+      { orderId },
+      { $set: { "razorpay.orderId": razorpayOrder.id } }
+    );
+
+    console.log("✅ [PAYMENT] Razorpay order created:", {
+      orderId,
       razorpayOrderId: razorpayOrder.id,
-      amount: order.totalAmount 
+      amount: order.totalAmount,
     });
 
     return NextResponse.json({
@@ -90,7 +94,7 @@ export async function POST(req: NextRequest) {
       razorpayOrderId: razorpayOrder.id,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
-      key: process.env.RAZORPAY_API_KEY,
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     });
   } catch (err: any) {
     console.error("Razorpay order error:", err);

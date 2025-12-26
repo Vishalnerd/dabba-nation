@@ -65,11 +65,14 @@ export default function AdminDashboard() {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
 
+    // 🔒 CRITICAL: Only count PAID orders in analytics
+    const paidOrders = ordersData.filter((o) => o.paymentStatus === "paid");
+
     // Orders today and this week
-    const ordersToday = ordersData.filter(
+    const ordersToday = paidOrders.filter(
       (o) => new Date(o.createdAt) >= today
     ).length;
-    const ordersThisWeek = ordersData.filter(
+    const ordersThisWeek = paidOrders.filter(
       (o) => new Date(o.createdAt) >= weekAgo
     ).length;
 
@@ -79,7 +82,7 @@ export default function AdminDashboard() {
     let totalRevenueToday = 0;
     let totalRevenueThisWeek = 0;
 
-    ordersData.forEach((order) => {
+    paidOrders.forEach((order) => {
       const pkg = order.package || "Unknown";
       const amount = order.totalAmount || 0;
       const orderDate = new Date(order.createdAt);
@@ -111,15 +114,16 @@ export default function AdminDashboard() {
     const packagePopularity = revenueByPackage.map((item) => ({
       package: item.package,
       count: item.count,
-      percentage: (item.count / ordersData.length) * 100,
+      percentage:
+        paidOrders.length > 0 ? (item.count / paidOrders.length) * 100 : 0,
     }));
 
-    // Daily growth (last 7 days)
+    // Daily growth (last 7 days) - only paid orders
     const dailyGrowth: { date: string; orders: number; revenue: number }[] = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
       const nextDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
-      const dayOrders = ordersData.filter((o) => {
+      const dayOrders = paidOrders.filter((o) => {
         const orderDate = new Date(o.createdAt);
         return orderDate >= date && orderDate < nextDate;
       });
@@ -171,6 +175,17 @@ export default function AdminDashboard() {
     meal: "breakfast" | "lunch" | "dinner"
   ) => {
     try {
+      // 🔒 Check payment status before allowing meal marking
+      const order = orders.find((o) => o.orderId === orderId);
+      if (order && order.paymentStatus !== "paid") {
+        setToast({
+          message: "Cannot mark meal - Payment not confirmed",
+          type: "error",
+        });
+        setTimeout(() => setToast(null), 3000);
+        return;
+      }
+
       const res = await fetch("/api/admin/orders/mark-meal", {
         method: "PATCH",
         headers: {
@@ -209,7 +224,10 @@ export default function AdminDashboard() {
     const matchesPackage =
       packageFilter === "" || order.package === packageFilter;
 
-    return matchesSearch && matchesPackage;
+    // 🔒 CRITICAL: Only show paid orders (backend already filters, but double-check)
+    const isPaid = order.paymentStatus === "paid";
+
+    return matchesSearch && matchesPackage && isPaid;
   });
 
   // Get unique packages from orders
@@ -229,28 +247,32 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-lg border border-green-100 p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-xl">DN</span>
+        <div className="bg-white rounded-xl shadow-lg border border-green-100 p-4 sm:p-6 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-bold text-lg sm:text-xl">
+                  DN
+                </span>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-800">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
                   Admin Dashboard
                 </h1>
-                <p className="text-gray-600">Manage all orders</p>
+                <p className="text-sm sm:text-base text-gray-600">
+                  Manage all orders
+                </p>
               </div>
             </div>
-            <div className="flex items-center space-x-6">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
               <button
                 onClick={handleRefresh}
-                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md"
+                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md"
               >
                 <svg
-                  className="w-5 h-5"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -262,14 +284,14 @@ export default function AdminDashboard() {
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                <span>Refresh</span>
+                <span className="hidden sm:inline">Refresh</span>
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md"
+                className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md"
               >
                 <svg
-                  className="w-5 h-5"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -281,11 +303,11 @@ export default function AdminDashboard() {
                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                   />
                 </svg>
-                <span>Logout</span>
+                <span className="hidden sm:inline">Logout</span>
               </button>
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Total Orders</p>
-                <p className="text-2xl font-bold text-green-600">
+              <div className="text-left sm:text-right bg-green-50 px-4 py-2 rounded-lg">
+                <p className="text-xs sm:text-sm text-gray-500">Total Orders</p>
+                <p className="text-xl sm:text-2xl font-bold text-green-600">
                   {orders.length}
                 </p>
               </div>
@@ -295,24 +317,24 @@ export default function AdminDashboard() {
 
         {/* Analytics Dashboard */}
         {analytics && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
             {/* Orders Today */}
-            <div className="bg-white rounded-xl shadow-lg border border-green-100 p-6">
+            <div className="bg-white rounded-xl shadow-lg border border-green-100 p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-600 mb-1">
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1">
                     📊 Orders Today
                   </p>
-                  <p className="text-3xl font-bold text-green-600">
+                  <p className="text-2xl sm:text-3xl font-bold text-green-600">
                     {analytics.ordersToday}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     ₹{analytics.totalRevenueToday.toLocaleString()} revenue
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg
-                    className="w-6 h-6 text-green-600"
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-green-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -329,22 +351,22 @@ export default function AdminDashboard() {
             </div>
 
             {/* Orders This Week */}
-            <div className="bg-white rounded-xl shadow-lg border border-blue-100 p-6">
+            <div className="bg-white rounded-xl shadow-lg border border-blue-100 p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-600 mb-1">
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1">
                     📊 Orders This Week
                   </p>
-                  <p className="text-3xl font-bold text-blue-600">
+                  <p className="text-2xl sm:text-3xl font-bold text-blue-600">
                     {analytics.ordersThisWeek}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     ₹{analytics.totalRevenueThisWeek.toLocaleString()} revenue
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg
-                    className="w-6 h-6 text-blue-600"
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -361,22 +383,22 @@ export default function AdminDashboard() {
             </div>
 
             {/* Total Revenue */}
-            <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-6">
+            <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-600 mb-1">
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1">
                     💰 Total Revenue
                   </p>
-                  <p className="text-3xl font-bold text-purple-600">
+                  <p className="text-2xl sm:text-3xl font-bold text-purple-600">
                     ₹{analytics.totalRevenue.toLocaleString()}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     {orders.length} orders
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg
-                    className="w-6 h-6 text-purple-600"
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -393,13 +415,13 @@ export default function AdminDashboard() {
             </div>
 
             {/* Average Order Value */}
-            <div className="bg-white rounded-xl shadow-lg border border-orange-100 p-6">
+            <div className="bg-white rounded-xl shadow-lg border border-orange-100 p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-600 mb-1">
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1">
                     💵 Avg Order Value
                   </p>
-                  <p className="text-3xl font-bold text-orange-600">
+                  <p className="text-2xl sm:text-3xl font-bold text-orange-600">
                     ₹
                     {orders.length > 0
                       ? Math.round(
@@ -409,9 +431,9 @@ export default function AdminDashboard() {
                   </p>
                   <p className="text-xs text-gray-500 mt-1">per order</p>
                 </div>
-                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg
-                    className="w-6 h-6 text-orange-600"
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -431,10 +453,10 @@ export default function AdminDashboard() {
 
         {/* Revenue by Package & Package Popularity */}
         {analytics && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
             {/* Revenue by Package */}
-            <div className="bg-white rounded-xl shadow-lg border border-green-100 p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <div className="bg-white rounded-xl shadow-lg border border-green-100 p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 flex items-center">
                 <span className="mr-2">💰</span>
                 Revenue by Package
               </h2>
@@ -476,8 +498,8 @@ export default function AdminDashboard() {
             </div>
 
             {/* Package Popularity */}
-            <div className="bg-white rounded-xl shadow-lg border border-green-100 p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <div className="bg-white rounded-xl shadow-lg border border-green-100 p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 flex items-center">
                 <span className="mr-2">📦</span>
                 Package Popularity
               </h2>
@@ -518,52 +540,55 @@ export default function AdminDashboard() {
 
         {/* Growth Trend Chart */}
         {analytics && (
-          <div className="bg-white rounded-xl shadow-lg border border-green-100 p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <div className="bg-white rounded-xl shadow-lg border border-green-100 p-4 sm:p-6 mb-6">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 flex items-center">
               <span className="mr-2">📈</span>
               7-Day Growth Trend
             </h2>
-            <div className="grid grid-cols-7 gap-2">
-              {analytics.dailyGrowth.map((day, index) => {
-                const maxOrders = Math.max(
-                  ...analytics.dailyGrowth.map((d) => d.orders)
-                );
-                const maxRevenue = Math.max(
-                  ...analytics.dailyGrowth.map((d) => d.revenue)
-                );
-                const heightPercentage =
-                  maxOrders > 0 ? (day.orders / maxOrders) * 100 : 0;
+            <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+              <div className="min-w-[500px] grid grid-cols-7 gap-2">
+                {analytics.dailyGrowth.map((day, index) => {
+                  const maxOrders = Math.max(
+                    ...analytics.dailyGrowth.map((d) => d.orders)
+                  );
+                  const maxRevenue = Math.max(
+                    ...analytics.dailyGrowth.map((d) => d.revenue)
+                  );
+                  const heightPercentage =
+                    maxOrders > 0 ? (day.orders / maxOrders) * 100 : 0;
 
-                return (
-                  <div key={index} className="text-center">
-                    <div className="mb-2 h-48 flex flex-col justify-end">
-                      <div
-                        className="bg-gradient-to-t from-green-600 to-green-400 rounded-t-lg transition-all duration-500 hover:from-green-700 hover:to-green-500 cursor-pointer relative group"
-                        style={{
-                          height: `${heightPercentage}%`,
-                          minHeight: day.orders > 0 ? "20px" : "0px",
-                        }}
-                      >
-                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                          {day.orders} orders
-                          <br />₹{day.revenue.toLocaleString()}
+                  return (
+                    <div key={index} className="text-center">
+                      <div className="mb-2 h-48 flex flex-col justify-end">
+                        <div
+                          className="bg-gradient-to-t from-green-600 to-green-400 rounded-t-lg transition-all duration-500 hover:from-green-700 hover:to-green-500 cursor-pointer relative group"
+                          style={{
+                            height: `${heightPercentage}%`,
+                            minHeight: day.orders > 0 ? "20px" : "0px",
+                          }}
+                        >
+                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                            {day.orders} orders
+                            <br />₹{day.revenue.toLocaleString()}
+                          </div>
                         </div>
                       </div>
+                      <div className="text-xs font-semibold text-gray-600 mb-1">
+                        {day.date}
+                      </div>
+                      <div className="text-sm font-bold text-green-600">
+                        {day.orders}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        ₹{day.revenue > 0 ? (day.revenue / 1000).toFixed(1) : 0}
+                        k
+                      </div>
                     </div>
-                    <div className="text-xs font-semibold text-gray-600 mb-1">
-                      {day.date}
-                    </div>
-                    <div className="text-sm font-bold text-green-600">
-                      {day.orders}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      ₹{day.revenue > 0 ? (day.revenue / 1000).toFixed(1) : 0}k
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between text-sm">
+            <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center">
                   <div className="w-3 h-3 bg-green-600 rounded mr-2"></div>
@@ -585,8 +610,8 @@ export default function AdminDashboard() {
         {/* Orders Table */}
         <div className="bg-white rounded-xl shadow-lg border border-green-100 overflow-hidden">
           {/* Search and Filter Section */}
-          <div className="bg-gradient-to-r from-green-50 to-white p-6 border-b border-green-100">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-gradient-to-r from-green-50 to-white p-4 sm:p-6 border-b border-green-100">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
               {/* Search Input */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -644,8 +669,8 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
+          {/* Table - Desktop View */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-green-600 text-white">
                 <tr>
@@ -745,6 +770,81 @@ export default function AdminDashboard() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Card View - Mobile/Tablet */}
+          <div className="lg:hidden divide-y divide-gray-200">
+            {filteredOrders.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                No orders found
+              </div>
+            ) : (
+              filteredOrders.map((order) => (
+                <div
+                  key={order.orderId}
+                  className="p-4 hover:bg-green-50 transition-colors"
+                >
+                  {/* Order Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-gray-900 mb-1">
+                        {order.orderId}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 capitalize">
+                          {order.package || "N/A"}
+                        </span>
+                        <span
+                          className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
+                            order.paymentStatus === "paid"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {order.paymentStatus}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Customer Info */}
+                  <div className="mb-3 pb-3 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-900">
+                      {order.customer.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {order.customer.phone}
+                    </p>
+                  </div>
+
+                  {/* Meals */}
+                  {order.meals ? (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-gray-600 mb-2">
+                        Meal Status:
+                      </p>
+                      <MealButton
+                        label="Breakfast"
+                        delivered={order.meals.breakfast?.delivered || false}
+                        onClick={() => markMeal(order.orderId, "breakfast")}
+                      />
+                      <MealButton
+                        label="Lunch"
+                        delivered={order.meals.lunch?.delivered || false}
+                        onClick={() => markMeal(order.orderId, "lunch")}
+                      />
+                      <MealButton
+                        label="Dinner"
+                        delivered={order.meals.dinner?.delivered || false}
+                        onClick={() => markMeal(order.orderId, "dinner")}
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-gray-500 text-sm">No meals data</span>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

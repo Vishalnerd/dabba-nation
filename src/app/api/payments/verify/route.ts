@@ -110,20 +110,22 @@ export async function POST(req: NextRequest) {
 
     // ✅ 6. Mark order as paid + store Razorpay IDs (atomic update)
     const updatedOrder = await Order.findOneAndUpdate(
-      { 
-        orderId,
-        paymentStatus: "pending" // Only update if still pending
-      },
-      {
-        $set: {
-          paymentStatus: "paid",
-          "razorpay.orderId": razorpay_order_id,
-          "razorpay.paymentId": razorpay_payment_id,
-          "razorpay.verifiedAt": new Date(),
-        }
-      },
-      { new: true }
-    );
+  {
+    orderId,
+    paymentStatus: "pending",
+    "razorpay.orderId": razorpay_order_id,
+  },
+  {
+    $set: {
+      paymentStatus: "paid",
+      active: true, // 🔒 CRITICAL: Activate order when payment verified
+      "razorpay.paymentId": razorpay_payment_id,
+      "razorpay.verifiedAt": new Date(),
+    },
+  },
+  { new: true }
+);
+
 
     if (!updatedOrder) {
       return NextResponse.json(
@@ -133,7 +135,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Log successful verification
-    console.log("Payment verified successfully", { orderId, razorpay_payment_id });
+    console.log("✅ [PAYMENT] Verified successfully:", { orderId, razorpay_payment_id });
 
     return NextResponse.json({ 
       success: true,

@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
 import Order from "@/models/Order";
+import connectDB from "@/lib/db";
 import { validateAdminToken, logAdminAction } from "@/lib/validations";
-
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/dabba_nation";
-
-async function connectDB() {
-  if (mongoose.connection.readyState === 1) return;
-  await mongoose.connect(MONGODB_URI);
-}
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -51,6 +43,19 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Order not found" },
         { status: 404 }
+      );
+    }
+
+    /* ---------------- PAYMENT VERIFICATION ---------------- */
+    // 🔒 CRITICAL: Block meal delivery for unpaid orders
+    if (order.paymentStatus !== "paid") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Cannot mark meal as delivered - Payment not confirmed",
+          paymentStatus: order.paymentStatus
+        },
+        { status: 403 }
       );
     }
 
@@ -100,7 +105,10 @@ export async function PATCH(req: NextRequest) {
   } catch (err: any) {
     console.error("Error marking meal:", err);
     return NextResponse.json(
-      { success: false, error: err.message },
+      { 
+        success: false, 
+        error: "Failed to mark meal as delivered" 
+      },
       { status: 500 }
     );
   }

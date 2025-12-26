@@ -1,15 +1,8 @@
 // app/api/admin/orders/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
 import Order from "@/models/Order";
+import connectDB from "@/lib/db";
 import { checkAdminMisuse, validateAdminToken, checkRateLimit } from "@/lib/validations";
-
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/dabba_nation";
-
-async function connectDB() {
-  if (mongoose.connection.readyState === 1) return;
-  await mongoose.connect(MONGODB_URI);
-}
 
 export async function GET(req: NextRequest) {
   try {
@@ -54,36 +47,77 @@ export async function GET(req: NextRequest) {
     // --- END ADMIN CHECK ---
 
     await connectDB();
-  const orders = await Order.find({ active: true }).sort({ createdAt: -1 });
+    
+    // ⚡ OPTIMIZED QUERY: Only select necessary fields to reduce payload size
+    const orders = await Order.find({ 
+      active: true,
+      paymentStatus: "paid" // 🔒 CRITICAL: Block unpaid orders from showing
+    })
+    .select(
+      "orderId customer.name customer.phone customer.address customer.pincode " +
+      "package paymentStatus createdAt totalAmount " +
+      "meals.breakfast.delivered meals.breakfast.deliveredAt " +
+      "meals.lunch.delivered meals.lunch.deliveredAt " +
+      "meals.dinner.delivered meals.dinner.deliveredAt " +
+      "lastMealReset"
+    )
+    .sort({ createdAt: -1 })
+    .lean(); // Use lean() for better performance - returns plain JS objects
 
-const today = new Date();
-today.setHours(0, 0, 0, 0);
+    // ⚡ OPTIMIZED MEAL RESET: Batch update instead of individual saves
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-for (const order of orders) {
-  // Skip daily packages
-  if (order.package === "daily") continue;
+    const ordersToReset = orders.filter(order => {
+      if (order.package === "daily") return false;
+      const lastReset = new Date(order.lastMealReset);
+      lastReset.setHours(0, 0, 0, 0);
+      return lastReset < today;
+    });
 
-  const lastReset = new Date(order.lastMealReset);
-  lastReset.setHours(0, 0, 0, 0);
+    // Batch update orders that need meal reset
+    if (ordersToReset.length > 0) {
+      await Order.updateMany(
+        {
+          orderId: { $in: ordersToReset.map(o => o.orderId) }
+        },
+        {
+          $set: {
+            "meals.breakfast.delivered": false,
+            "meals.lunch.delivered": false,
+            "meals.dinner.delivered": false,
+            lastMealReset: new Date()
+          },
+          $unset: {
+            "meals.breakfast.deliveredAt": "",
+            "meals.lunch.deliveredAt": "",
+            "meals.dinner.deliveredAt": ""
+          }
+        }
+      );
 
-  // If new day → reset meals
-  if (lastReset < today) {
-    order.meals = {
-      breakfast: { delivered: false },
-      lunch: { delivered: false },
-      dinner: { delivered: false },
-    };
+      // Update local data for response
+      ordersToReset.forEach(order => {
+        order.meals = {
+          breakfast: { delivered: false },
+          lunch: { delivered: false },
+          dinner: { delivered: false }
+        };
+        order.lastMealReset = new Date();
+      });
+    }
 
-    order.lastMealReset = new Date();
-    await order.save();
-  }
-}
-
-return NextResponse.json({ success: true, orders });
+    return NextResponse.json({ success: true, orders });
 
     
   } catch (err: any) {
     console.error("Error fetching orders:", err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: "Failed to fetch orders" 
+      }, 
+      { status: 500 }
+    );
   }
 }

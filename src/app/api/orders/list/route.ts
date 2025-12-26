@@ -29,11 +29,13 @@ export async function GET(req: NextRequest) {
     const totalOrders = await Order.countDocuments({});
     const totalPages = Math.ceil(totalOrders / limit);
 
+    // ⚡ OPTIMIZED: Use lean() for better performance
     const orders = await Order.find({})
       .limit(limit)
       .skip(skip)
       .sort({ createdAt: -1 })
-      .select("orderId paymentStatus createdAt customer package totalAmount active"); // Only select needed fields
+      .select("orderId paymentStatus createdAt customer package totalAmount active")
+      .lean(); // Returns plain JS objects - faster than Mongoose documents
 
     return Response.json({ 
       success: true, 
@@ -41,15 +43,7 @@ export async function GET(req: NextRequest) {
       totalOrders,
       totalPages,
       currentPage: page,
-      orders: orders.map(o => ({
-        orderId: o.orderId,
-        paymentStatus: o.paymentStatus,
-        createdAt: o.createdAt,
-        customer: o.customer,
-        package: o.package,
-        totalAmount: o.totalAmount,
-        active: o.active
-      }))
+      orders // No need to map - lean() already returns plain objects
     });
   } catch (error) {
     console.error("Error fetching orders:", error);

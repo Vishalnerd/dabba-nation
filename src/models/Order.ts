@@ -55,7 +55,7 @@ const OrderSchema = new Schema(
 
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid"],
+      enum: ["pending", "paid","failed"],
       default: "pending",
     },
 
@@ -64,6 +64,7 @@ const OrderSchema = new Schema(
       orderId: String,
       paymentId: String,
       verifiedAt: Date,
+      signature: String,
     },
   },
   { timestamps: true }

@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       // Log successful admin login
-      console.log("[ADMIN LOGIN SUCCESS]", { ip: clientIp, timestamp: new Date().toISOString() });
+      console.log("✅ [ADMIN] Login success:", { ip: clientIp, timestamp: new Date().toISOString() });
       
       return NextResponse.json({
         success: true,
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Log failed login attempt
-    console.warn("[ADMIN LOGIN FAILED]", { ip: clientIp, username, timestamp: new Date().toISOString() });
+    console.warn("⚠️ [ADMIN] Login failed:", { ip: clientIp, username, timestamp: new Date().toISOString() });
 
     return NextResponse.json(
       { success: false, error: "Invalid credentials" },

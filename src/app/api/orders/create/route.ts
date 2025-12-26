@@ -104,6 +104,7 @@ export async function POST(req: NextRequest) {
         pincode: customer.pincode,
       },
       paymentStatus: "pending",
+      active: false, // 🔒 CRITICAL: Order inactive until payment confirmed
       meals: {
         breakfast: { delivered: false },
         lunch: { delivered: false },
@@ -112,8 +113,6 @@ export async function POST(req: NextRequest) {
     });
 
     const savedOrder = await newOrder.save();
-
-    console.log("Order saved successfully:", orderId);
 
     return NextResponse.json({ success: true, orderId, order: savedOrder }, { status: 201 });
   } catch (err: any) {
@@ -124,10 +123,14 @@ export async function POST(req: NextRequest) {
       message: err.message,
       code: err.code,
     });
+    
+    // 🔒 SECURITY: Hide error details in production
+    const isProduction = process.env.NODE_ENV === 'production';
+    
     return NextResponse.json({ 
       success: false, 
-      error: err.message || "Failed to create order",
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      error: isProduction ? "Failed to create order" : err.message,
+      details: isProduction ? undefined : err.stack
     }, { status: 500 });
   }
 }

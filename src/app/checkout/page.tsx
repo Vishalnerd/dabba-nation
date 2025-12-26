@@ -245,8 +245,10 @@ function CheckoutContent() {
               "Payment verified, redirecting to confirmation with orderId:",
               orderData.orderId
             );
-            // Payment successful
-            router.push(`/order-confirmation?orderId=${orderData.orderId}`);
+            // Payment successful - redirect with pending status
+            router.push(
+              `/order-confirmation?orderId=${orderData.orderId}&status=pending`
+            );
           } catch (err) {
             console.error("Payment verification error:", err);
             setToast({
@@ -259,12 +261,30 @@ function CheckoutContent() {
         },
         modal: {
           ondismiss: () => {
+            setToast({
+              message: "Payment cancelled",
+              type: "error",
+            });
             setIsSubmitting(false);
           },
         },
       };
 
       const rzp = new (window as any).Razorpay(options);
+
+      // 🔴 HANDLE PAYMENT FAILURE
+      rzp.on("payment.failed", function (response: any) {
+        console.error("Payment failed:", response);
+
+        setToast({
+          message: "Payment failed. Please try again.",
+          type: "error",
+        });
+
+        setIsSubmitting(false);
+      });
+
+      // OPEN CHECKOUT
       rzp.open();
     } catch (err) {
       console.error("Checkout error:", err);

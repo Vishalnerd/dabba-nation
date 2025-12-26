@@ -20,8 +20,12 @@ function OrderConfirmationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderId = searchParams.get("orderId");
+  const initialStatus = searchParams.get("status");
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [paymentStatus, setPaymentStatus] = useState<string>(
+    initialStatus || "pending"
+  );
 
   useEffect(() => {
     if (!orderId) {
@@ -39,6 +43,7 @@ function OrderConfirmationContent() {
           const data = await response.json();
           console.log("Order found:", data.order);
           setOrder(data.order);
+          setPaymentStatus(data.order.paymentStatus);
           setLoading(false);
         } else if (response.status === 404 && retryCount < 5) {
           // Retry if order not found (might be a timing issue)
@@ -65,6 +70,53 @@ function OrderConfirmationContent() {
     // Start fetching after a small delay to allow server to process
     setTimeout(() => fetchOrder(), 500);
   }, [orderId, router]);
+
+  // Poll for payment status updates if payment is pending
+  useEffect(() => {
+    if (
+      !orderId ||
+      !order ||
+      paymentStatus === "paid" ||
+      paymentStatus === "success"
+    )
+      return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        console.log("Polling for payment status update...");
+        const response = await fetch(`/api/orders/${orderId}`);
+        if (response.ok) {
+          const data = await response.json();
+          const newStatus = data.order.paymentStatus;
+          console.log("Current payment status:", newStatus);
+
+          if (newStatus !== paymentStatus) {
+            setPaymentStatus(newStatus);
+            setOrder(data.order);
+
+            // Stop polling when payment is confirmed
+            if (newStatus === "paid" || newStatus === "success") {
+              console.log("✅ Payment confirmed by webhook!");
+              clearInterval(pollInterval);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error polling payment status:", err);
+      }
+    }, 3000); // Poll every 3 seconds
+
+    // Stop polling after 5 minutes
+    const timeout = setTimeout(() => {
+      clearInterval(pollInterval);
+      console.log("Stopped polling after 5 minutes");
+    }, 300000);
+
+    return () => {
+      clearInterval(pollInterval);
+      clearTimeout(timeout);
+    };
+  }, [orderId, order, paymentStatus]);
 
   if (loading) {
     return (
@@ -178,12 +230,32 @@ function OrderConfirmationContent() {
 
             {/* Title */}
             <div className="text-center mb-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
-                Payment Successful! 🎉
-              </h1>
-              <p className="text-gray-600">
-                Your order has been confirmed and will be processed shortly.
-              </p>
+              {paymentStatus === "paid" || paymentStatus === "success" ? (
+                <>
+                  <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+                    Payment Successful! 🎉
+                  </h1>
+                  <p className="text-gray-600">
+                    Your order has been confirmed and will be processed shortly.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+                    Payment Pending ⏳
+                  </h1>
+                  <p className="text-gray-600">
+                    We're verifying your payment. This usually takes a few
+                    seconds.
+                  </p>
+                  <div className="mt-4 flex items-center justify-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
+                    <span className="text-sm text-amber-600 font-medium">
+                      Verifying payment...
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Order Details */}
@@ -224,9 +296,45 @@ function OrderConfirmationContent() {
                   <span className="text-gray-700 font-medium">
                     Payment Status
                   </span>
-                  <span className="px-3 py-1 bg-green-200 text-green-800 rounded-full text-sm font-semibold capitalize">
-                    {order.paymentStatus}
-                  </span>
+                  {paymentStatus === "paid" || paymentStatus === "success" ? (
+                    <span className="px-3 py-1 bg-green-200 text-green-800 rounded-full text-sm font-semibold flex items-center space-x-1">
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span>Confirmed</span>
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 bg-amber-200 text-amber-800 rounded-full text-sm font-semibold flex items-center space-x-1">
+                      <svg
+                        className="w-4 h-4 animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span>Pending</span>
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -268,39 +376,82 @@ function OrderConfirmationContent() {
               </div>
             </div>
 
-            {/* What's Next */}
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
-              <h2 className="text-lg font-bold text-gray-800 mb-4">
-                What's Next?
-              </h2>
+            {/* Payment Pending Alert or What's Next */}
+            {paymentStatus === "pending" ? (
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-6 mb-8">
+                <div className="flex items-start space-x-3">
+                  <svg
+                    className="w-6 h-6 text-amber-600 mt-0.5 flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <div>
+                    <h3 className="text-lg font-bold text-amber-800 mb-2">
+                      Payment Verification in Progress
+                    </h3>
+                    <p className="text-amber-700 mb-3">
+                      Your payment is being verified by our payment gateway.
+                      This typically takes 10-30 seconds.
+                    </p>
+                    <ul className="space-y-2 text-sm text-amber-700">
+                      <li className="flex items-center space-x-2">
+                        <div className="w-1.5 h-1.5 bg-amber-600 rounded-full"></div>
+                        <span>Please do not close this page</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <div className="w-1.5 h-1.5 bg-amber-600 rounded-full"></div>
+                        <span>We're automatically checking for updates</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <div className="w-1.5 h-1.5 bg-amber-600 rounded-full"></div>
+                        <span>
+                          You'll see a confirmation once payment is verified
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-8">
+                <h2 className="text-lg font-bold text-gray-800 mb-4">
+                  What's Next?
+                </h2>
 
-              <ol className="space-y-3">
-                <li className="flex items-start">
-                  <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-500 text-white text-sm font-bold mr-3 flex-shrink-0">
-                    1
-                  </span>
-                  <span className="text-gray-700">
-                    You'll receive a confirmation SMS shortly
-                  </span>
-                </li>
-                <li className="flex items-start">
-                  <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-500 text-white text-sm font-bold mr-3 flex-shrink-0">
-                    2
-                  </span>
-                  <span className="text-gray-700">
-                    Our team will contact you to finalize meal preferences
-                  </span>
-                </li>
-                <li className="flex items-start">
-                  <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-500 text-white text-sm font-bold mr-3 flex-shrink-0">
-                    3
-                  </span>
-                  <span className="text-gray-700">
-                    Deliveries will start from the next business day
-                  </span>
-                </li>
-              </ol>
-            </div>
+                <ol className="space-y-3">
+                  <li className="flex items-start">
+                    <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-green-500 text-white text-sm font-bold mr-3 flex-shrink-0">
+                      1
+                    </span>
+                    <span className="text-gray-700">
+                      You'll receive a confirmation SMS shortly
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-green-500 text-white text-sm font-bold mr-3 flex-shrink-0">
+                      2
+                    </span>
+                    <span className="text-gray-700">
+                      Our team will contact you to finalize meal preferences
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-green-500 text-white text-sm font-bold mr-3 flex-shrink-0">
+                      3
+                    </span>
+                    <span className="text-gray-700">
+                      Deliveries will start from the next business day
+                    </span>
+                  </li>
+                </ol>
+              </div>
+            )}
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
