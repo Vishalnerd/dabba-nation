@@ -7,12 +7,17 @@ export function middleware(req: NextRequest) {
   // 🔒 STRICT CORS PROTECTION
   // Get the origin from the request
   const origin = req.headers.get("origin");
+  const host = req.headers.get("host");
   
   // Allowed origins - add your production domain
   const allowedOrigins = [
     "https://dabba-nation.vercel.app",
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-  ].filter(Boolean); // Remove undefined values
+    process.env.NEXT_PUBLIC_APP_URL,
+    "http://localhost:3000",
+    "http://localhost:3001",
+    host ? `http://${host}` : null,
+    host ? `https://${host}` : null,
+  ].filter(Boolean) as string[]; // Remove undefined values
 
   // Check if origin is allowed
   if (origin && allowedOrigins.includes(origin)) {
@@ -69,9 +74,15 @@ export function middleware(req: NextRequest) {
 
   // 🚫 BLOCK ADMIN ROUTES FROM UNAUTHORIZED ORIGINS
   if (req.nextUrl.pathname.startsWith("/api/admin")) {
-    // Admin routes should only be accessed from allowed origins
-    if (origin && !allowedOrigins.includes(origin)) {
-      console.warn("⚠️ Admin API access from unauthorized origin:", origin);
+    // Allow same-origin requests (when origin matches the host)
+    const requestHost = req.headers.get("host");
+    const isSameOrigin = !origin || 
+                         origin === `https://${requestHost}` || 
+                         origin === `http://${requestHost}` ||
+                         allowedOrigins.includes(origin);
+    
+    if (!isSameOrigin) {
+      console.warn("⚠️ Admin API access from unauthorized origin:", origin, "Host:", requestHost);
       return NextResponse.json(
         { success: false, error: "Forbidden" },
         { status: 403 }
