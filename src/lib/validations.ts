@@ -175,11 +175,20 @@ export function logAdminAction(
 }
 
 /**
- * Validate admin token format
+ * Validate admin token format - DEPRECATED
+ * Use verifyAdminToken from @/lib/auth instead for JWT validation
  */
 export function validateAdminToken(token: string | null): boolean {
   if (!token) return false;
 
+  // For backward compatibility, check both JWT and legacy token
   const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+  
+  // If using JWT, defer to JWT verification
+  if (token.includes('.')) {
+    // This looks like a JWT, should use verifyAdminToken from @/lib/auth
+    return false;
+  }
+  
   return token === ADMIN_TOKEN && token.length > 0;
 }

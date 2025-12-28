@@ -2,7 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Order from "@/models/Order";
 import connectDB from "@/lib/db";
-import { checkAdminMisuse, validateAdminToken, checkRateLimit } from "@/lib/validations";
+import { checkAdminMisuse, checkRateLimit } from "@/lib/validations";
+import { verifyAdminToken } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
@@ -18,18 +19,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // --- ADMIN CHECK ---
-    const token = req.headers.get("x-admin-token"); // expect token from frontend
+    // --- JWT ADMIN CHECK ---
+    const decodedToken = verifyAdminToken(req);
     
-    // ✅ Validate admin token
-    if (!validateAdminToken(token)) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    if (!token) {
+    if (!decodedToken) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -37,7 +30,7 @@ export async function GET(req: NextRequest) {
     }
 
     // ✅ Check for admin misuse on data retrieval
-    const abuseCheck = checkAdminMisuse(token, "fetch_orders", 60, 30); // 30 fetches per minute
+    const abuseCheck = checkAdminMisuse(decodedToken.username, "fetch_orders", 60, 30); // 30 fetches per minute
     if (!abuseCheck.allowed) {
       return NextResponse.json(
         { success: false, error: abuseCheck.reason || "Too many requests. Please try again later." },
@@ -47,6 +40,12 @@ export async function GET(req: NextRequest) {
     // --- END ADMIN CHECK ---
 
     await connectDB();
+    
+    // 3️⃣ PAGINATION
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const skip = (page - 1) * limit;
     
     // ⚡ OPTIMIZED QUERY: Only select necessary fields to reduce payload size
     const orders = await Order.find({ 
@@ -62,7 +61,15 @@ export async function GET(req: NextRequest) {
       "lastMealReset"
     )
     .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
     .lean(); // Use lean() for better performance - returns plain JS objects
+
+    // Get total count for pagination
+    const totalOrders = await Order.countDocuments({
+      active: true,
+      paymentStatus: "paid"
+    });
 
     // ⚡ OPTIMIZED MEAL RESET: Batch update instead of individual saves
     const today = new Date();
@@ -107,7 +114,16 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true, orders });
+    return NextResponse.json({ 
+      success: true, 
+      orders,
+      pagination: {
+        page,
+        limit,
+        total: totalOrders,
+        totalPages: Math.ceil(totalOrders / limit)
+      }
+    });
 
     
   } catch (err: any) {

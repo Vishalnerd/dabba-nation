@@ -1,9 +1,10 @@
 // app/admin/dashboard/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Toast from "../../../components/ui/Toast";
+import { useAdminAuth } from "@/lib/useAuth";
 
 type Meal = {
   delivered: boolean;
@@ -41,6 +42,9 @@ type Analytics = {
 };
 
 export default function AdminDashboard() {
+  // Verify JWT token and redirect if invalid
+  useAdminAuth();
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,6 +55,13 @@ export default function AdminDashboard() {
   } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [packageFilter, setPackageFilter] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+  });
 
   const token =
     typeof window !== "undefined" ? localStorage.getItem("adminToken") : "";
@@ -149,17 +160,21 @@ export default function AdminDashboard() {
     };
   };
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (page = currentPage) => {
     console.log("Orders:", orders);
 
     setLoading(true);
-    const res = await fetch("/api/admin/orders", {
-      headers: { "x-admin-token": token || "" },
+    // 3️⃣ PAGINATION: Include page and limit parameters
+    const res = await fetch(`/api/admin/orders?page=${page}&limit=20`, {
+      headers: { Authorization: `Bearer ${token || ""}` },
     });
     const data = await res.json();
     if (data.success) {
       setOrders(data.orders);
       setAnalytics(calculateAnalytics(data.orders));
+      if (data.pagination) {
+        setPagination(data.pagination);
+      }
     }
     setLoading(false);
   };
@@ -190,14 +205,30 @@ export default function AdminDashboard() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-token": token || "",
+          Authorization: `Bearer ${token || ""}`,
         },
         body: JSON.stringify({ orderId, meal }),
       });
 
       const data = await res.json();
       if (data.success) {
-        fetchOrders();
+        // 5️⃣ OPTIMIZE: Update state locally instead of re-fetching
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.orderId === orderId
+              ? {
+                  ...o,
+                  meals: {
+                    ...o.meals,
+                    [meal]: {
+                      delivered: true,
+                      deliveredAt: new Date().toISOString(),
+                    },
+                  },
+                }
+              : o
+          )
+        );
         setToast({ message: `${meal} marked as delivered`, type: "success" });
       } else {
         setToast({
@@ -684,6 +715,9 @@ export default function AdminDashboard() {
                     Customer
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Address
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
                     Payment
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
@@ -695,7 +729,7 @@ export default function AdminDashboard() {
                 {filteredOrders.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={6}
                       className="px-6 py-12 text-center text-gray-500"
                     >
                       No orders found
@@ -722,6 +756,16 @@ export default function AdminDashboard() {
                           </p>
                           <p className="text-gray-500">
                             {order.customer.phone}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm">
+                          <p className="text-gray-700">
+                            {order.customer.address}
+                          </p>
+                          <p className="text-gray-500 text-xs">
+                            PIN: {order.customer.pincode}
                           </p>
                         </div>
                       </td>
@@ -846,6 +890,145 @@ export default function AdminDashboard() {
               ))
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {pagination.totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 rounded-b-xl">
+              <div className="flex flex-1 justify-between sm:hidden">
+                <button
+                  onClick={() => {
+                    const newPage = Math.max(1, currentPage - 1);
+                    setCurrentPage(newPage);
+                    fetchOrders(newPage);
+                  }}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => {
+                    const newPage = Math.min(
+                      pagination.totalPages,
+                      currentPage + 1
+                    );
+                    setCurrentPage(newPage);
+                    fetchOrders(newPage);
+                  }}
+                  disabled={currentPage === pagination.totalPages}
+                  className="relative ml-3 inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+              <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-gray-700">
+                    Showing{" "}
+                    <span className="font-medium">
+                      {(currentPage - 1) * pagination.limit + 1}
+                    </span>{" "}
+                    to{" "}
+                    <span className="font-medium">
+                      {Math.min(
+                        currentPage * pagination.limit,
+                        pagination.total
+                      )}
+                    </span>{" "}
+                    of <span className="font-medium">{pagination.total}</span>{" "}
+                    results
+                  </p>
+                </div>
+                <div>
+                  <nav
+                    className="isolate inline-flex -space-x-px rounded-md shadow-sm"
+                    aria-label="Pagination"
+                  >
+                    <button
+                      onClick={() => {
+                        const newPage = Math.max(1, currentPage - 1);
+                        setCurrentPage(newPage);
+                        fetchOrders(newPage);
+                      }}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="sr-only">Previous</span>
+                      <svg
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                    {Array.from(
+                      { length: Math.min(5, pagination.totalPages) },
+                      (_, i) => {
+                        let pageNum;
+                        if (pagination.totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= pagination.totalPages - 2) {
+                          pageNum = pagination.totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => {
+                              setCurrentPage(pageNum);
+                              fetchOrders(pageNum);
+                            }}
+                            className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                              currentPage === pageNum
+                                ? "z-10 bg-green-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
+                                : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      }
+                    )}
+                    <button
+                      onClick={() => {
+                        const newPage = Math.min(
+                          pagination.totalPages,
+                          currentPage + 1
+                        );
+                        setCurrentPage(newPage);
+                        fetchOrders(newPage);
+                      }}
+                      disabled={currentPage === pagination.totalPages}
+                      className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="sr-only">Next</span>
+                      <svg
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       {toast && (
@@ -859,7 +1042,8 @@ export default function AdminDashboard() {
   );
 }
 
-function MealButton({
+// 4️⃣ MEMOIZE: Prevent unnecessary re-renders
+const MealButton = memo(function MealButton({
   label,
   delivered,
   onClick,
@@ -882,4 +1066,4 @@ function MealButton({
       {label}: {delivered ? "Delivered ✅" : "Pending ⏳"}
     </button>
   );
-}
+});

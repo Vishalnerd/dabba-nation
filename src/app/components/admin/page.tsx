@@ -85,6 +85,12 @@ export default function AdminLogin() {
           >
             Login
           </button>
+          <button
+            onClick={() => router.push("/")}
+            className="w-full px-6 py-3 bg-gray-700 hover:bg-gray-500 text-white rounded-lg font-semibold transition-colors"
+          >
+            Back to Home
+          </button>
         </form>
       </div>
     </div>

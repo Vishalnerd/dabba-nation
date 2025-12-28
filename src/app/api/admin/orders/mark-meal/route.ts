@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import Order from "@/models/Order";
 import connectDB from "@/lib/db";
-import { validateAdminToken, logAdminAction } from "@/lib/validations";
+import { logAdminAction } from "@/lib/validations";
+import { verifyAdminToken } from "@/lib/auth";
 
 export async function PATCH(req: NextRequest) {
   try {
-    /* ---------------- ADMIN AUTH ---------------- */
-    const token = req.headers.get("x-admin-token");
+    /* ---------------- JWT ADMIN AUTH ---------------- */
+    const decodedToken = verifyAdminToken(req);
 
-    if (!token || !validateAdminToken(token)) {
+    if (!decodedToken) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -85,10 +86,19 @@ export async function PATCH(req: NextRequest) {
       { orderId },
       { $set: updateData },
       { new: true }
-    );
+    )
+    .select(
+      "orderId customer.name customer.phone customer.address customer.pincode " +
+      "package paymentStatus createdAt totalAmount " +
+      "meals.breakfast.delivered meals.breakfast.deliveredAt " +
+      "meals.lunch.delivered meals.lunch.deliveredAt " +
+      "meals.dinner.delivered meals.dinner.deliveredAt " +
+      "lastMealReset"
+    )
+    .lean(); // 1️⃣ Use lean() for better performance
 
     /* ---------------- AUDIT LOG ---------------- */
-    logAdminAction(token, "meal_marked_delivered", {
+    logAdminAction(decodedToken.username, "meal_marked_delivered", {
       orderId,
       meal,
       package: order.package,

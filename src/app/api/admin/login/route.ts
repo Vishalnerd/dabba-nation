@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/validations";
+import * as jwt from "jsonwebtoken";
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,9 +27,9 @@ export async function POST(req: NextRequest) {
 
     const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
     const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-    const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+    const JWT_SECRET = process.env.JWT_SECRET;
 
-    if (!ADMIN_USERNAME || !ADMIN_PASSWORD || !ADMIN_TOKEN) {
+    if (!ADMIN_USERNAME || !ADMIN_PASSWORD || !JWT_SECRET) {
       console.error("Admin environment variables not configured");
       return NextResponse.json(
         { success: false, error: "Server configuration error" },
@@ -37,12 +38,24 @@ export async function POST(req: NextRequest) {
     }
 
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      // Generate JWT token
+      const expiresIn: string = process.env.JWT_EXPIRES_IN || "7d";
+      // @ts-ignore - expiresIn type inference issue
+      const token = jwt.sign(
+        { 
+          username, 
+          role: "admin",
+        },
+        JWT_SECRET,
+        { expiresIn }
+      );
+
       // Log successful admin login
       console.log("✅ [ADMIN] Login success:", { ip: clientIp, timestamp: new Date().toISOString() });
       
       return NextResponse.json({
         success: true,
-        token: ADMIN_TOKEN,
+        token,
       });
     }
 
