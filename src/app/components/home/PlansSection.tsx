@@ -3,21 +3,10 @@ import PlanFlipCard from "../ui/PlanFlipCard";
 
 const plans = [
   {
-    id: "trial",
-    title: "The Teaser",
-    subtitle: "Perfect for a taste test",
-    price: "99",
-    duration: "Day",
-    color: "#FFD166", // Yellow
-    features: ["1 Full Meal", "Fresh Phulkas", "Dessert Included"],
-    tag: "Newbie Friendly",
-    href: "/checkout?plan=trial",
-  },
-  {
     id: "weekly",
     title: "Weekly Warrior",
     subtitle: "Stress-free work weeks",
-    price: "599",
+    price: "490",
     duration: "Week",
     color: "#A3D9A5", // Mint Green
     features: [
@@ -33,7 +22,7 @@ const plans = [
     id: "monthly",
     title: "The Legend",
     subtitle: "The ultimate peace of mind",
-    price: "2199",
+    price: "1950",
     duration: "Month",
     color: "#FF8C42", // Orange
     features: [
@@ -66,18 +55,10 @@ export default function PlansSection() {
           </p>
         </div>
 
-        {/* Plans Grid - Handling Mobile, Tablet, and Desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-12 gap-x-6 lg:gap-x-8 items-stretch">
+        {/* Plans Grid - Centered layout for 2 cards */}
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-center justify-center max-w-5xl mx-auto">
           {plans.map((plan) => (
-            <div
-              key={plan.id}
-              className={`relative group ${
-                // Center the third card on tablet screens (sm to lg)
-                plan.id === "monthly"
-                  ? "sm:col-span-2 lg:col-span-1 sm:max-w-md sm:mx-auto lg:w-full"
-                  : ""
-              }`}
-            >
+            <div key={plan.id} className="relative group w-full max-w-sm">
               {/* Playful Tag - Adjusted for better visibility on small screens */}
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-30 bg-[#333333] text-white text-[10px] md:text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-[4px_4px_0px_rgba(0,0,0,0.2)] whitespace-nowrap border-2 border-white">
                 {plan.tag}

@@ -35,24 +35,29 @@ export default function PlanFlipCard({
 
   return (
     <div
-      className="perspective h-[420px] cursor-pointer group"
+      className="h-[420px] cursor-pointer group"
+      style={{ perspective: "1000px" }}
       onMouseEnter={() => setFlipped(true)}
       onMouseLeave={() => setFlipped(false)}
       onClick={() => setFlipped(!flipped)}
     >
       <div
-        className={`relative w-full h-full preserve-3d transition-transform duration-700 ease-in-out
-          ${flipped ? "[transform:rotateY(180deg)]" : ""}
+        className={`relative w-full h-full transition-transform duration-700 ease-in-out
           ${highlighted ? "scale-[1.05]" : ""}
         `}
+        style={{
+          transformStyle: "preserve-3d",
+          transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+        }}
       >
         {/* FRONT SIDE */}
         <div
-          className="absolute inset-0 backface-hidden rounded-[2rem] p-8 flex flex-col justify-between items-center shadow-[8px_8px_0px_rgba(0,0,0,0.1)] border-4 border-[#333333]"
+          className="absolute inset-0 rounded-[2rem] p-8 flex flex-col justify-between items-center shadow-[8px_8px_0px_rgba(0,0,0,0.1)] border-4 border-[#333333]"
           style={{
             backgroundColor: color,
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
+            transform: "rotateY(0deg)",
           }}
         >
           <div className="mt-12 text-center">
@@ -76,10 +81,11 @@ export default function PlanFlipCard({
 
         {/* BACK SIDE */}
         <div
-          className="absolute inset-0 backface-hidden [transform:rotateY(180deg)] bg-white border-4 border-[#333333] rounded-[2rem] p-8 flex flex-col shadow-[8px_8px_0px_#333333]"
+          className="absolute inset-0 bg-white border-4 border-[#333333] rounded-[2rem] p-8 flex flex-col shadow-[8px_8px_0px_#333333]"
           style={{
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
+            transform: "rotateY(180deg)",
           }}
         >
           <div className="mb-4">

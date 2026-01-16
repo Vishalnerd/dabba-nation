@@ -13,7 +13,7 @@ export default function HeroSection() {
   return (
     <section
       id="home"
-      className="relative w-full min-h-screen bg-[#F9F7F0] pt-24 md:pt-32 pb-12 px-4 sm:px-6 md:px-12 flex flex-col md:flex-row items-center justify-between overflow-hidden"
+      className="relative w-full min-h-screen bg-[#F9F7F0] pt-24 md:pt-32 pb-12 px-4 sm:px-6 md:px-12 flex flex-col md:flex-row items-center justify-between overflow-hidden mt-5 md:mt-0"
     >
       {/* Left Content: Text & CTA */}
       <div className="w-full md:w-1/2 z-10 text-center md:text-left flex flex-col items-center md:items-start order-2 md:order-1 mt-12 md:mt-0">
@@ -49,26 +49,16 @@ export default function HeroSection() {
 
       {/* Right Content: The Visuals */}
       <div className="w-full md:w-1/2 relative flex justify-center items-center order-1 md:order-2">
-        {/* Background Decorative Blob - Smaller on mobile */}
-        <div className="absolute w-[250px] h-[250px] md:w-[500px] md:h-[500px] bg-[#FFD166] rounded-full filter blur-3xl opacity-30 animate-pulse"></div>
-
-        {/* The Hero Image Container */}
-        <div className="relative z-10 animate-bounce-slow">
-          <img
-            src="/hero-illustration.svg"
-            alt="Delicious Indian Tiffin"
-            className="w-[240px] sm:w-[350px] md:w-[500px] h-auto drop-shadow-2xl rotate-[5deg] transition-transform"
+        {/* The Hero Video Container */}
+        <div className="relative z-10 ">
+          <video
+            src="/hero-video.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className=" h-auto drop-shadow-2xl transition-transform rounded-2xl"
           />
-
-          {/* Playful Floating Badge - Responsive scaling */}
-          <div className="absolute -top-4 -right-2 md:-right-4 bg-white border-4 border-[#333333] p-3 md:p-4 rounded-2xl shadow-[6px_6px_0px_#333333] rotate-[12deg]">
-            <p className="text-xl md:text-2xl font-black text-[#FF8C42] leading-none">
-              ₹69{" "}
-              <span className="text-xs md:text-sm text-gray-400 font-bold block md:inline uppercase tracking-tighter">
-                /start
-              </span>
-            </p>
-          </div>
         </div>
       </div>
     </section>

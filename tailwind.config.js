@@ -14,6 +14,15 @@ export default {
       rotate: {
         "y-180": "180deg",
       },
+      fontFamily: {
+        // Now you can use 'font-playful' in any component
+        playful: [
+          "var(--font-fredoka)",
+          "Comic Sans MS",
+          "cursive",
+          "sans-serif",
+        ],
+      },
     },
   },
 };

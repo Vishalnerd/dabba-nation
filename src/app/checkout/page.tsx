@@ -40,6 +40,11 @@ function CheckoutContent() {
     pincode: "",
   });
 
+  // Scroll to top on component mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<{
@@ -153,7 +158,7 @@ function CheckoutContent() {
       <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
           {/* PLAN SUMMARY - Stays at top on Mobile, sticky on Desktop */}
-          <div className="lg:col-span-2 order-2 lg:order-1">
+          <div className="lg:col-span-2 order-1 lg:order-1">
             <div className="bg-white rounded-[2rem] p-6 shadow-[8px_8px_0px_rgba(0,0,0,0.1)] border-4 border-[#333333] lg:sticky lg:top-28">
               <h2 className="text-2xl font-black text-[#333333] mb-6 flex items-center gap-2 uppercase tracking-tighter">
                 <span className="text-2xl">🍱</span> Your Order
@@ -215,7 +220,7 @@ function CheckoutContent() {
           </div>
 
           {/* DELIVERY FORM - Primary Action Area */}
-          <div className="lg:col-span-3 order-1 lg:order-2">
+          <div className="lg:col-span-3 order-2 lg:order-2">
             <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 sm:p-8 md:p-10 shadow-[12px_12px_0px_#FFD166] border-4 border-[#333333]">
               <h2 className="text-2xl md:text-3xl font-black text-[#333333] mb-8 uppercase tracking-tighter italic">
                 Delivery Details
