@@ -69,6 +69,18 @@ function OrderConfirmationContent() {
 
   if (!order) return null;
 
+  // Create prefilled WhatsApp message
+  const whatsappMessage = encodeURIComponent(
+    `Hi DabbaNation! 🍱\n\n` +
+      `I've just placed an order and wanted to confirm the details:\n\n` +
+      `📝 Order ID: ${order.orderId}\n` +
+      `👤 Name: ${order.customer.name}\n` +
+      `📦 Plan: ${order.package.toUpperCase()}\n` +
+      `📍 Address: ${order.customer.address}, ${order.customer.pincode}\n` +
+      `💰 Amount: ₹${order.totalAmount}\n\n` +
+      `Looking forward to delicious meals!`
+  );
+
   return (
     <div className="min-h-screen bg-[#F9F7F0] relative overflow-hidden py-12 md:py-20 px-4 sm:px-6">
       {/* Playful Background Elements */}
@@ -133,7 +145,7 @@ function OrderConfirmationContent() {
                   Order ID
                 </span>
                 <span className="font-black text-[#333333] text-sm">
-                  #{order.orderId.slice(-6)}
+                  {order.orderId}
                 </span>
               </div>
               <div className="flex justify-between border-b-2 border-dashed border-gray-200 pb-2">
@@ -177,7 +189,7 @@ function OrderConfirmationContent() {
             Back to Home
           </button>
           <a
-            href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}`}
+            href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}?text=${whatsappMessage}`}
             target="_blank"
             className="w-full sm:w-auto px-10 py-4 bg-[#25D366] text-white rounded-2xl font-black uppercase tracking-widest shadow-[4px_4px_0px_#128C7E] hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center gap-2 text-sm md:text-base border-2 border-[#333333]"
           >

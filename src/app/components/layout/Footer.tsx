@@ -68,7 +68,8 @@ export default function Footer() {
                   Office Address
                 </span>
                 <span className="font-black text-[#333333] text-sm leading-tight italic">
-                  Devli, Sangam Vihar, New Delhi
+                  House No. 428,Nai Basti,Deoli,Pushpa Bhawan,South
+                  Delhi,Delhi-110080
                 </span>
               </div>
               <div className="flex flex-col">
@@ -76,7 +77,9 @@ export default function Footer() {
                   Email Us
                 </span>
                 <span className="font-black text-[#333333] text-sm underline break-all">
-                  hello@dabbanation.in
+                  <a href="mailto:dabbnation.tiffin@gmail.com">
+                    dabbnation.tiffin@gmail.com
+                  </a>
                 </span>
               </div>
             </div>

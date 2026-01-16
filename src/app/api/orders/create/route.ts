@@ -134,9 +134,9 @@ export async function POST(req: NextRequest) {
         address: customer.address,
         pincode: customer.pincode,
       },
-      paymentStatus: "pending",
+      paymentStatus: "paid", // ✅ Auto-mark as paid (no payment gateway)
       status: "placed",
-      active: false, // 🔒 CRITICAL: Order inactive until payment confirmed
+      active: true, // ✅ Auto-activate subscription (no payment gateway)
       startDate,
       endDate,
       meals: {

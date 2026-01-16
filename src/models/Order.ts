@@ -12,7 +12,7 @@ const OrderSchema = new Schema(
 
     package: {
       type: String,
-      enum: ["daily", "weekly", "monthly"],
+      enum: ["weekly", "monthly"],
       required: true,
     },
 
@@ -102,17 +102,11 @@ OrderSchema.index({ active: 1, createdAt: -1 });
 // Index for payment status queries
 OrderSchema.index({ paymentStatus: 1 });
 
-// Compound index for admin dashboard (active + paid orders sorted by date)
-OrderSchema.index({ active: 1, paymentStatus: 1, createdAt: -1 });
-
 // Index for lifecycle automation (active orders with recent meal resets)
 OrderSchema.index({ active: 1, lastMealReset: 1 });
 
 // Index for checking active subscriptions by user
 OrderSchema.index({ user: 1, active: 1, endDate: 1 });
-
-// Index for auto-expiring subscriptions
-OrderSchema.index({ active: 1, endDate: 1 });
 
 export default models.Order || mongoose.model("Order", OrderSchema);
 

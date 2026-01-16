@@ -10,10 +10,13 @@ const plans = [
     duration: "Week",
     color: "#A3D9A5", // Mint Green
     features: [
-      "6 Days (Mon-Sat)",
-      "Free Delivery",
-      "Menu Variety",
-      "Skip Anytime",
+      "Daily sabzi changes",
+
+      "4-week rotating menu",
+
+      "Balanced portions with roti, sabzi, dal & rice",
+
+      "Weekly & monthly plans only",
     ],
     tag: "Most Popular",
     href: "/checkout?plan=weekly",
@@ -26,10 +29,13 @@ const plans = [
     duration: "Month",
     color: "#FF8C42", // Orange
     features: [
-      "24 Full Meals",
-      "Priority Delivery",
-      "Sunday Surprise Sweet",
-      "24/7 Support",
+      "Daily sabzi changes",
+
+      "4-week rotating menu",
+
+      "Balanced portions with roti, sabzi, dal & rice",
+
+      "Weekly & monthly plans only",
     ],
     tag: "Best Value",
     href: "/checkout?plan=monthly",
@@ -81,7 +87,7 @@ export default function PlansSection() {
         {/* Bottom Note */}
         <div className="mt-16 text-center">
           <div className="inline-block bg-white/50 border-2 border-dashed border-gray-300 rounded-2xl px-6 py-3">
-            <p className="text-sm text-gray-500 font-bold italic">
+            <p className="text-sm text-gray-700 font-bold italic">
               🍱 Need something bigger? Custom corporate/bulk plans available
               upon request.
             </p>

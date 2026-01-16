@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ShieldCheck } from "lucide-react"; // Added ShieldCheck icon
 
 const scrollToSection = (id: string, setOpen?: (open: boolean) => void) => {
   const element = document.getElementById(id);
@@ -16,7 +16,6 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // Add shadow and solid bg on scroll for extra safety
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -31,7 +30,6 @@ export default function Navbar() {
   ];
 
   return (
-    // Updated background: Solid color on mobile, slightly transparent on desktop scroll
     <nav
       className={`fixed top-0 w-full z-[100] transition-all duration-300 border-b-4 border-[#333333]/10 
       ${
@@ -78,7 +76,7 @@ export default function Navbar() {
 
         {/* DESKTOP Navigation Links */}
         <div className="hidden md:block">
-          <ul className="flex space-x-8 items-center">
+          <ul className="flex space-x-6 lg:space-x-8 items-center">
             {navLinks.map((item) => (
               <li
                 key={item.label}
@@ -93,6 +91,18 @@ export default function Navbar() {
               <Link href="/components/about">About</Link>
               <span className="absolute bottom-[-4px] left-0 w-0 h-1 bg-[#FFD166] rounded-full transition-all group-hover:w-full"></span>
             </li>
+
+            {/* ADMIN BUTTON (Desktop) */}
+            <li>
+              <Link
+                href="/admin/login"
+                className="flex items-center gap-1.5 text-[#333333]/60 hover:text-[#333333] font-bold text-sm transition-colors border-2 border-transparent hover:border-[#333333]/10 px-3 py-1 rounded-lg"
+              >
+                <ShieldCheck size={18} />
+                Admin
+              </Link>
+            </li>
+
             <li>
               <button
                 onClick={() => scrollToSection("plans")}
@@ -123,7 +133,7 @@ export default function Navbar() {
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <ul className="flex flex-col space-y-8 text-center px-6">
+        <ul className="flex flex-col space-y-6 text-center px-6">
           {navLinks.map((item) => (
             <li
               key={item.label}
@@ -138,7 +148,19 @@ export default function Navbar() {
               About
             </Link>
           </li>
-          <li className="pt-6">
+
+          {/* ADMIN LINK (Mobile) */}
+          <li className="text-2xl font-bold text-[#333333]/70 uppercase tracking-tighter py-2 border-t-2 border-[#333333]/10">
+            <Link
+              href="/admin/login"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center justify-center gap-2"
+            >
+              <ShieldCheck size={24} /> Admin Access
+            </Link>
+          </li>
+
+          <li className="pt-4">
             <button
               onClick={() => scrollToSection("plans", setIsOpen)}
               className="bg-[#FF8C42] text-white px-10 py-4 rounded-2xl font-black text-2xl shadow-[6px_6px_0px_#333333] active:translate-y-2 active:shadow-none transition-all border-4 border-[#333333]"

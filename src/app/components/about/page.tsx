@@ -39,7 +39,7 @@ export default function AboutPage() {
   };
 
   return (
-    <div className="bg-[#F9F7F0] min-h-screen pt-24 pb-12 overflow-x-hidden">
+    <div className="bg-[#F9F7F0] min-h-screen pt-16 pb-12 overflow-x-hidden">
       {/* HERO SECTION */}
       <section className="px-6 py-8 md:py-16 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-10 lg:gap-16">
         {/* Text Container */}
@@ -52,15 +52,25 @@ export default function AboutPage() {
             <br className="hidden lg:block" /> One Dabba at a time.
           </h1>
           <p className="text-base md:text-lg text-gray-700 font-bold leading-relaxed mb-6">
-            DabbaNation started with a simple problem: Delhi is full of amazing
-            people, but finding a meal that tastes like home shouldn't be a
-            struggle.
+            Dabba Nation ek ghar-se shuru hui tiffin service hai, jiska ek hi
+            aim hai — roz ka saaf, tasty aur ghar jaisa khana deliver karna. Hum
+            un logon ke liye kaam karte hain jo: daily bahar ka junk food avoid
+            karna chahte hain ghar ka khana miss karte hain ek reliable,
+            long-term lunch solution chahte hain Chahe aap working professional,
+            student, family, office, factory ya hospital ho — hum daily meals ka
+            consistent system provide karte hain.
           </p>
+          <h2 className="font-black text-[#333333] text-3xl mb-6 leading-[1.1] uppercase tracking-tighter italic">
+            Founder's Story
+          </h2>
           <p className="text-sm md:text-base text-gray-500 font-medium leading-relaxed max-w-2xl">
-            We aren't a massive corporate cloud kitchen. We are a community of
-            chefs and food lovers dedicated to bringing the authentic taste of
-            Indian households to students in PGs and busy office professionals.
-            No additives, no excessive oil—just pure, honest nutrition.
+            Dabba Nation was started with a simple thought — everyone deserves
+            fresh, home-style food they can trust every single day. Seeing how
+            working professionals, factory staff, families, and even hospital
+            workers struggle to find reliable daily meals, we decided to build a
+            system, not just a tiffin service. With a focus on hygiene,
+            consistency, and honest food, Dabba Nation was created to deliver
+            balanced meals that feel like home — on time, every day.
           </p>
         </div>
 
