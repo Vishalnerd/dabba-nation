@@ -3,8 +3,9 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, User, ChefHat } from "lucide-react";
+import { Lock, User, ChefHat, Home } from "lucide-react";
 import Toast from "../../components/ui/Toast";
+import Link from "next/link";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
@@ -36,7 +37,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F7F0] flex items-center justify-center px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#F9F7F0] flex items-center justify-center px-4 py-8 relative overflow-hidden">
       {/* Background blobs */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-[#FFD166] rounded-full opacity-20 -translate-x-32 -translate-y-32"></div>
 
@@ -48,22 +49,22 @@ export default function AdminLogin() {
         />
       )}
 
-      <div className="w-full max-w-md relative z-10">
-        <div className="bg-white border-4 border-[#333333] rounded-[2.5rem] p-8 md:p-10 shadow-[12px_12px_0px_#333333]">
+      <div className="w-full max-w-md relative z-10 my-auto">
+        <div className="bg-white border-4 border-[#333333] rounded-[2.5rem] p-6 md:p-8 shadow-[12px_12px_0px_#333333]">
           {/* Header */}
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-[#FF8C42] rounded-2xl border-4 border-[#333333] shadow-[4px_4px_0px_#333333] mb-6 rotate-[-5deg]">
-              <ChefHat className="w-10 h-10 text-white" />
+          <div className="text-center mb-6 md:mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-[#FF8C42] rounded-2xl border-4 border-[#333333] shadow-[4px_4px_0px_#333333] mb-4 md:mb-6 rotate-[-5deg]">
+              <ChefHat className="w-8 h-8 md:w-10 md:h-10 text-white" />
             </div>
-            <h1 className="text-3xl font-black text-[#333333] uppercase tracking-tighter">
+            <h1 className="text-2xl md:text-3xl font-black text-[#333333] uppercase tracking-tighter">
               Admin <span className="text-[#FF8C42]">Portal</span>
             </h1>
-            <p className="text-gray-500 font-bold text-sm">
+            <p className="text-gray-500 font-bold text-xs md:text-sm">
               Authorized Dabba-Managers Only
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-4 md:space-y-5">
             {/* Username */}
             <div>
               <label className="block text-xs font-black uppercase tracking-widest text-[#333333] mb-2">
@@ -104,16 +105,23 @@ export default function AdminLogin() {
             <button
               disabled={loading}
               type="submit"
-              className="w-full bg-[#333333] text-white py-5 rounded-2xl font-black text-xl shadow-[0px_6px_0px_#FF8C42] active:translate-y-1 active:shadow-none transition-all uppercase tracking-widest disabled:opacity-50"
+              className="w-full bg-[#333333] text-white py-4 md:py-5 rounded-2xl font-black text-lg md:text-xl shadow-[0px_6px_0px_#FF8C42] active:translate-y-1 active:shadow-none transition-all uppercase tracking-widest disabled:opacity-50"
             >
               {loading ? "Verifying..." : "Enter Kitchen →"}
             </button>
+
+            {/* Back to Home Button */}
+            <Link href="/">
+              <button
+                type="button"
+                className="w-full bg-white text-[#333333] py-3 md:py-4 rounded-2xl font-black text-base md:text-lg border-4 border-[#333333] shadow-[4px_4px_0px_#333333] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+              >
+                <Home className="w-4 h-4 md:w-5 md:h-5" />
+                Back to Home
+              </button>
+            </Link>
           </form>
         </div>
-
-        <p className="text-center mt-8 text-gray-400 font-bold text-xs uppercase tracking-widest">
-          © 2026 DabbaNation Central Command
-        </p>
       </div>
     </div>
   );

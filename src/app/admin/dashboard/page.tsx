@@ -9,7 +9,10 @@ import OrderList from "../OrderList/page";
 export default async function AdminDashboard() {
   await connectDB();
   // Fetch from DB
-  const rawOrders = await Order.find({ active: true }).sort({ createdAt: -1 });
+  const rawOrders = await Order.find({
+    active: true,
+    endDate: { $gte: new Date() },
+  }).sort({ endDate: 1 });
 
   // Convert Mongoose objects to plain JSON for Client Component
   const orders = JSON.parse(JSON.stringify(rawOrders));

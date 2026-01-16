@@ -87,7 +87,6 @@ export function calculateSubscriptionDates(packageType: string) {
   const now = new Date();
   let durationDays = 0;
 
-  if (packageType === "trial" || packageType === "daily") durationDays = 1;
   if (packageType === "weekly") durationDays = 7;
   if (packageType === "monthly") durationDays = 30;
 

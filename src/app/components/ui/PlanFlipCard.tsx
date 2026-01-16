@@ -35,7 +35,7 @@ export default function PlanFlipCard({
 
   return (
     <div
-      className="h-[420px] cursor-pointer group"
+      className="w-full h-[480px] cursor-pointer group"
       style={{ perspective: "1000px" }}
       onMouseEnter={() => setFlipped(true)}
       onMouseLeave={() => setFlipped(false)}
@@ -43,7 +43,7 @@ export default function PlanFlipCard({
     >
       <div
         className={`relative w-full h-full transition-transform duration-700 ease-in-out
-          ${highlighted ? "scale-[1.05]" : ""}
+          ${highlighted ? "scale-[1.02]" : ""}
         `}
         style={{
           transformStyle: "preserve-3d",

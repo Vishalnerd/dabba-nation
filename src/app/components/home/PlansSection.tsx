@@ -62,9 +62,12 @@ export default function PlansSection() {
         </div>
 
         {/* Plans Grid - Centered layout for 2 cards */}
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-center justify-center max-w-5xl mx-auto">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-stretch justify-center max-w-5xl mx-auto">
           {plans.map((plan) => (
-            <div key={plan.id} className="relative group w-full max-w-sm">
+            <div
+              key={plan.id}
+              className="relative group w-full lg:w-[400px] flex-shrink-0"
+            >
               {/* Playful Tag - Adjusted for better visibility on small screens */}
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-30 bg-[#333333] text-white text-[10px] md:text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-[4px_4px_0px_rgba(0,0,0,0.2)] whitespace-nowrap border-2 border-white">
                 {plan.tag}

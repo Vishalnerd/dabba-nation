@@ -87,7 +87,7 @@ export default function Footer() {
               href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-6 block text-center bg-[#333333] text-white py-4 rounded-2xl font-black text-xs shadow-[4px_4px_0px_white] active:shadow-none active:translate-y-1 transition-all"
+              className="mt-6 block text-center bg-[#333333] text-white py-4 rounded-2xl font-black text-xs shadow-[4px_4px_0px_white] active:shadow-none active:translate-y-1 transition-all hover:bg-[#555555] uppercase tracking-widest"
             >
               SAY HI!
             </a>
