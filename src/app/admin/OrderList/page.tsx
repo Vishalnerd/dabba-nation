@@ -5,15 +5,19 @@ import { format, differenceInDays } from "date-fns";
 import { Calendar, Clock, Search } from "lucide-react";
 import DeactivateButton from "@/app/components/ui/DeactivateButton";
 
-export default function OrderList({ initialOrders }: { initialOrders: any[] }) {
+export default function OrderList({
+  initialOrders = [],
+}: {
+  initialOrders?: any[];
+}) {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Filter logic: Checks if search term matches Name or Order ID
-  const filteredOrders = initialOrders.filter((order) => {
+  const filteredOrders = (initialOrders || []).filter((order) => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      order.customer.name.toLowerCase().includes(searchLower) ||
-      order.orderId.toLowerCase().includes(searchLower)
+      order?.customer?.name?.toLowerCase().includes(searchLower) ||
+      order?.orderId?.toLowerCase().includes(searchLower)
     );
   });
 
