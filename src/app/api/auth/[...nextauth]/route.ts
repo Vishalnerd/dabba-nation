@@ -21,6 +21,10 @@ const handler = NextAuth({
       }
     })
   ],
-  pages: { signIn: "/admin/login" }
+  pages: { signIn: "/admin/login" },
+  secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: "jwt",
+  },
 });
 export { handler as GET, handler as POST };
