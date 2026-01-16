@@ -15,7 +15,7 @@ html {
 }
 
 body {
-  font-family: "Comic Sans MS", cursive, sans-serif; /* Playful font choice */
+  font-family: "Comic Sans MS", var(--font-fredoka), cursive, sans-serif;
   background-color: var(--color-bg-cream);
   color: var(--color-text-main);
   overflow-x: hidden;
