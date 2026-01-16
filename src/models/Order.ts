@@ -48,6 +48,23 @@ const OrderSchema = new Schema(
       type: Boolean,
       default: true, // subscription active
     },
+    
+    startDate: {
+      type: Date,
+      required: false,
+    },
+
+    endDate: {
+      type: Date,
+      required: false,
+    },
+
+    status: {
+      type: String,
+      enum: ["placed", "confirmed", "preparing", "delivered", "cancelled", "expired"],
+      default: "placed",
+    },
+
     lastMealReset: {
       type: Date,
       default: Date.now,
@@ -59,23 +76,27 @@ const OrderSchema = new Schema(
       default: "pending",
     },
 
-    // Razorpay payment details
-    razorpay: {
-      orderId: String,
-      paymentId: String,
-      verifiedAt: Date,
-      signature: String,
-    },
+    user: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+},
+
   },
   { timestamps: true }
 );
 
 // ==================== INDEXES ====================
-// Index for orderId lookups (unique already creates index)
+// Composite index for user + active status (most common query pattern)
+OrderSchema.index({ user: 1, active: 1, endDate: -1 });
+
+// Composite index for admin dashboard queries
+OrderSchema.index({ active: 1, paymentStatus: 1, createdAt: -1 });
+
 // Index for customer phone (spam prevention & lookups)
 OrderSchema.index({ "customer.phone": 1 });
 
-// Index for active orders retrieval
+// Index for auto-expiration queries
+OrderSchema.index({ active: 1, endDate: 1 });
 OrderSchema.index({ active: 1, createdAt: -1 });
 
 // Index for payment status queries
@@ -86,6 +107,12 @@ OrderSchema.index({ active: 1, paymentStatus: 1, createdAt: -1 });
 
 // Index for lifecycle automation (active orders with recent meal resets)
 OrderSchema.index({ active: 1, lastMealReset: 1 });
+
+// Index for checking active subscriptions by user
+OrderSchema.index({ user: 1, active: 1, endDate: 1 });
+
+// Index for auto-expiring subscriptions
+OrderSchema.index({ active: 1, endDate: 1 });
 
 export default models.Order || mongoose.model("Order", OrderSchema);
 

@@ -31,7 +31,9 @@ export async function GET(
       );
     }
 
-    const order = await Order.findOne({ orderId }).lean();
+    const order = await Order.findOne({ orderId })
+      .select('orderId customer package totalAmount paymentStatus active createdAt')
+      .lean();
 
     if (!order) {
       return NextResponse.json(

@@ -1,150 +1,132 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Menu, X } from "lucide-react"; // Import icons
+
+const scrollToSection = (id: string, setOpen?: (open: boolean) => void) => {
+  const element = document.getElementById(id);
+  if (element) {
+    element.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (setOpen) setOpen(false); // Close menu on mobile after click
+  }
+};
 
 export default function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const navLinks = [
+    { label: "Home", id: "home", type: "scroll" },
+    { label: "Plans", id: "plans", type: "scroll" },
+  ];
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? "bg-green-700/95 backdrop-blur-md shadow-lg py-3"
-          : "bg-green-700 shadow-md py-4"
-      } border-b border-green-100`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center transform transition-transform group-hover:scale-110 group-hover:rotate-12 shadow-lg">
-              <span className="text-white font-bold text-lg">DN</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight group-hover:text-green-100 transition-colors">
-              Dabba Nation
-            </h1>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4">
-            <a
-              href="#plans"
-              className="text-white hover:text-green-100 px-4 py-2 rounded-lg transition-all duration-200 hover:bg-green-600/50"
-            >
-              Plans
-            </a>
-            <a
-              href="#why-choose-us"
-              className="text-white hover:text-green-100 px-4 py-2 rounded-lg transition-all duration-200 hover:bg-green-600/50"
-            >
-              Why Us
-            </a>
-            <Link
-              href="/components/admin"
-              className="bg-gray-700 hover:bg-gray-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
-            >
-              Admin
-            </Link>
-            <a
-              href="#plans"
-              className="bg-green-600 hover:bg-green-500 text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-xl flex items-center space-x-2 group"
-            >
-              <span>Order Now</span>
-              <svg
-                className="w-4 h-4 transform group-hover:translate-x-1 transition-transform"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 7l5 5m0 0l-5 5m5-5H6"
-                />
-              </svg>
-            </a>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden text-white p-2 rounded-lg hover:bg-green-600/50 transition-colors"
-            aria-label="Toggle menu"
+    <nav className="fixed top-0 w-full z-50 bg-[#F9F7F0]/90 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b-4 border-[#333333]/10">
+      {/* Logo Section */}
+      <Link
+        href="/"
+        className="flex items-center gap-2 cursor-pointer group z-[60]"
+      >
+        <div className="bg-[#FF8C42] p-1.5 rounded-lg rotate-[-10deg] group-hover:rotate-0 transition-transform border-2 border-[#333333]">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="white"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <svg
-              className="w-6 h-6"
+            <rect
+              x="4"
+              y="8"
+              width="16"
+              height="12"
+              rx="2"
+              stroke="white"
+              strokeWidth="2"
               fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              {isMobileMenuOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              )}
-            </svg>
-          </button>
+            />
+            <path
+              d="M8 8V6C8 4.89543 8.89543 4 10 4H14C15.1046 4 16 4.89543 16 6V8"
+              stroke="white"
+              strokeWidth="2"
+            />
+          </svg>
         </div>
+        <h1 className="text-2xl font-black text-[#333333] tracking-tight">
+          Dabba<span className="text-[#FF8C42]">Nation</span>
+        </h1>
+      </Link>
 
-        {/* Mobile Menu */}
-        <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-            isMobileMenuOpen ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"
-          }`}
-        >
-          <div className="bg-green-600/30 backdrop-blur-sm rounded-lg p-4 space-y-2 border border-green-500/30">
-            <a
-              href="#plans"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block text-white hover:text-green-100 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-green-600/50"
+      {/* DESKTOP Navigation Links */}
+      <div className="hidden md:block">
+        <ul className="flex space-x-8 items-center">
+          {navLinks.map((item) => (
+            <li
+              key={item.label}
+              onClick={() => scrollToSection(item.id)}
+              className="text-[#333333] font-bold hover:text-[#FF8C42] cursor-pointer transition-colors relative group"
             >
-              Plans
-            </a>
-            <a
-              href="#why-choose-us"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block text-white hover:text-green-100 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-green-600/50"
-            >
-              Why Us
-            </a>
-            <Link
-              href="/components/admin"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block text-white hover:text-green-100 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-green-600/50"
-            >
-              Admin
-            </Link>
-            <a
-              href="#plans"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block bg-green-600 hover:bg-green-500 text-white px-4 py-3 rounded-lg text-center font-semibold transition-all duration-200 shadow-md"
+              {item.label}
+              <span className="absolute bottom-[-4px] left-0 w-0 h-1 bg-[#FFD166] rounded-full transition-all group-hover:w-full"></span>
+            </li>
+          ))}
+          <li className="text-[#333333] font-bold hover:text-[#FF8C42] cursor-pointer transition-colors relative group">
+            <Link href="/about">About</Link>
+            <span className="absolute bottom-[-4px] left-0 w-0 h-1 bg-[#FFD166] rounded-full transition-all group-hover:w-full"></span>
+          </li>
+          <li>
+            <button
+              onClick={() => scrollToSection("plans")}
+              className="bg-[#FF8C42] hover:bg-[#E86A33] text-white px-6 py-2 rounded-xl font-black shadow-[4px_4px_0px_#333333] active:translate-y-[2px] active:shadow-none transition-all"
             >
               Order Now
-            </a>
-          </div>
-        </div>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      {/* MOBILE Hamburger Button */}
+      <button
+        className="md:hidden z-[60] p-2 text-[#333333]"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {isOpen ? (
+          <X size={32} strokeWidth={3} />
+        ) : (
+          <Menu size={32} strokeWidth={3} />
+        )}
+      </button>
+
+      {/* MOBILE Menu Overlay */}
+      <div
+        className={`fixed inset-0 bg-[#FFD166] z-50 flex flex-col items-center justify-center transition-transform duration-500 ease-in-out ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <ul className="flex flex-col space-y-8 text-center">
+          {navLinks.map((item) => (
+            <li
+              key={item.label}
+              onClick={() => scrollToSection(item.id, setIsOpen)}
+              className="text-4xl font-black text-[#333333] uppercase tracking-tighter hover:text-white transition-colors cursor-pointer"
+            >
+              {item.label}
+            </li>
+          ))}
+          <li className="text-4xl font-black text-[#333333] uppercase tracking-tighter hover:text-white transition-colors">
+            <Link href="/components/about" onClick={() => setIsOpen(false)}>
+              About
+            </Link>
+          </li>
+          <li className="pt-4">
+            <button
+              onClick={() => scrollToSection("plans", setIsOpen)}
+              className="bg-[#FF8C42] text-white px-10 py-4 rounded-2xl font-black text-2xl shadow-[6px_6px_0px_#333333] active:translate-y-2 active:shadow-none transition-all"
+            >
+              ORDER NOW
+            </button>
+          </li>
+        </ul>
       </div>
     </nav>
   );

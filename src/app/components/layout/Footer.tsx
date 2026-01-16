@@ -1,171 +1,116 @@
 "use client";
 
-import { useState } from "react";
+import { Heart, Instagram, Twitter, Phone, Mail, MapPin } from "lucide-react";
 
 export default function Footer() {
-  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-
   return (
-    <footer className="relative bg-green-700 border-t border-green-600 overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-0 left-0 w-40 h-40 bg-green-100 rounded-full opacity-20 -translate-x-20 -translate-y-20 animate-pulse"></div>
-      <div className="absolute bottom-0 right-0 w-32 h-32 bg-green-200 rounded-full opacity-15 translate-x-16 translate-y-16 animate-pulse delay-300"></div>
-      <div className="absolute top-1/2 right-1/4 w-4 h-4 bg-green-300 rounded-full opacity-20 animate-bounce"></div>
-
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        {/* Main footer content */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 mb-10">
-          {/* Brand section */}
-          <div className="col-span-1 sm:col-span-2">
-            <div className="flex items-center space-x-3 mb-4 group">
-              <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center shadow-lg transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-                <span className="text-white font-bold text-xl">DN</span>
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-bold text-white">
-                Dabba Nation
-              </h3>
-            </div>
-            <p className="text-green-100 mb-6 max-w-md leading-relaxed text-sm sm:text-base">
-              Bringing the comfort of home-cooked meals to your doorstep. Fresh,
-              hygienic, and delicious tiffin service in Delhi.
-            </p>
-
-            {/* Contact info */}
-            <div className="space-y-3">
-              <div className="flex items-center text-green-100 group hover:text-white transition-colors duration-300">
-                <div className="p-2 bg-green-600 rounded-lg mr-3 group-hover:bg-green-500 transition-colors duration-300">
-                  <svg
-                    className="w-4 h-4 text-green-200"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+    <footer className="bg-[#F9F7F0] pt-12 md:pt-20 pb-10 px-4 sm:px-6 md:px-8 w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto w-full">
+        {/* Responsive Grid: 1 col on mobile, 2 on tablet, 4 on desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          {/* Brand Card - Spans 2 columns on larger screens */}
+          <div className="sm:col-span-2 bg-[#FF8C42] border-4 border-[#333333] p-6 md:p-8 rounded-[2.5rem] shadow-[8px_8px_0px_#333333] flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-white p-2 rounded-xl border-2 border-[#333333] rotate-[-10deg]">
+                  <span className="text-2xl">🍱</span>
                 </div>
-                <span className="text-sm sm:text-base">
-                  Nehru Place & nearby areas
+                <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter leading-none">
+                  DabbaNation
+                </h2>
+              </div>
+              <p className="text-white font-bold text-base md:text-lg max-w-sm leading-tight">
+                Fresh, home-cooked magic delivered straight to your desk. No
+                stress, just taste.
+              </p>
+            </div>
+            <div className="flex gap-4 mt-8">
+              {[Instagram, Twitter, Phone].map((Icon, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  className="bg-white p-3 rounded-2xl border-4 border-[#333333] shadow-[4px_4px_0px_#333333] hover:translate-y-1 hover:shadow-none transition-all"
+                >
+                  <Icon className="w-6 h-6 text-[#333333]" />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Office Location Map Card - Increased min-h for mobile */}
+          <div className="bg-white border-4 border-[#333333] rounded-[2.5rem] shadow-[8px_8px_0px_#333333] overflow-hidden relative min-h-[300px] sm:min-h-[250px] lg:min-h-0">
+            <iframe
+              title="Office Location"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14022.955513257521!2d77.22744885!3d28.51600375!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce19680e65535%3A0x4747e569b0ab97c8!2sDevli%2C%20Sangam%20Vihar%2C%20New%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1705412345678!5m2!1sen!2sin"
+              className="w-full h-full grayscale hover:grayscale-0 transition-all duration-500"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
+
+            <div className="absolute top-4 left-4 bg-[#A3D9A5] border-2 border-[#333333] px-3 py-1 rounded-full shadow-[2px_2px_0px_#333333] flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-[#333333]" strokeWidth={3} />
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#333333]">
+                Our HQ
+              </span>
+            </div>
+          </div>
+
+          {/* Contact Details Card */}
+          <div className="bg-[#FFD166] border-4 border-[#333333] p-6 md:p-8 rounded-[2.5rem] shadow-[8px_8px_0px_#333333] flex flex-col justify-between">
+            <h3 className="text-xl font-black text-[#333333] uppercase mb-4 tracking-widest leading-none">
+              Contact Us
+            </h3>
+            <div className="space-y-4">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase text-[#333333]/60 mb-1 tracking-tighter">
+                  Office Address
+                </span>
+                <span className="font-black text-[#333333] text-sm leading-tight italic">
+                  Devli, Sangam Vihar, New Delhi
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase text-[#333333]/60 mb-1 tracking-tighter">
+                  Email Us
+                </span>
+                <span className="font-black text-[#333333] text-sm underline break-all">
+                  hello@dabbanation.in
                 </span>
               </div>
             </div>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">
-              Quick Links
-            </h4>
-            <ul className="space-y-3">
-              <li>
-                <a
-                  href="#plans"
-                  className="group flex items-center text-green-100 hover:text-white transition-all duration-300 text-sm sm:text-base"
-                  onMouseEnter={() => setHoveredLink("plans")}
-                  onMouseLeave={() => setHoveredLink(null)}
-                >
-                  <span
-                    className={`inline-block w-0 h-0.5 bg-green-300 mr-0 group-hover:w-4 group-hover:mr-2 transition-all duration-300`}
-                  ></span>
-                  Tiffin Plans
-                </a>
-              </li>
-
-              <li>
-                <a
-                  href={`https://wa.me/${
-                    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER
-                  }?text=${encodeURIComponent(
-                    "Hi, Can i know more about DabbaNation?"
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center text-green-100 hover:text-white transition-all duration-300 text-sm sm:text-base"
-                  onMouseEnter={() => setHoveredLink("contact")}
-                  onMouseLeave={() => setHoveredLink(null)}
-                >
-                  <span
-                    className={`inline-block w-0 h-0.5 bg-green-300 mr-0 group-hover:w-4 group-hover:mr-2 transition-all duration-300`}
-                  ></span>
-                  Contact
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Service Info */}
-          <div>
-            <h4 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">
-              Service Hours
-            </h4>
-            <div className="space-y-3">
-              <div className="bg-green-600 rounded-lg p-3 sm:p-4 border border-green-500 hover:border-green-400 transition-all duration-300 hover:shadow-lg group">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">🍱</span>
-                    <span className="text-sm sm:text-base font-medium text-green-100 group-hover:text-white transition-colors duration-300">
-                      Lunch
-                    </span>
-                  </div>
-                  <span className="text-sm sm:text-base text-white font-semibold">
-                    12–2 PM
-                  </span>
-                </div>
-              </div>
-              <div className="bg-green-600 rounded-lg p-3 sm:p-4 border border-green-500 hover:border-green-400 transition-all duration-300 hover:shadow-lg group">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">🍛</span>
-                    <span className="text-sm sm:text-base font-medium text-green-100 group-hover:text-white transition-colors duration-300">
-                      Dinner
-                    </span>
-                  </div>
-                  <span className="text-sm sm:text-base text-white font-semibold">
-                    7–9 PM
-                  </span>
-                </div>
-              </div>
-              <p className="text-xs sm:text-sm text-green-200 mt-3 flex items-center">
-                <span className="w-1.5 h-1.5 bg-green-300 rounded-full mr-2 animate-pulse"></span>
-                Monday to Saturday
-              </p>
-            </div>
+            <a
+              href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 block text-center bg-[#333333] text-white py-4 rounded-2xl font-black text-xs shadow-[4px_4px_0px_white] active:shadow-none active:translate-y-1 transition-all"
+            >
+              SAY HI!
+            </a>
           </div>
         </div>
 
-        {/* Bottom section */}
-        <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-green-600">
-          <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-6 mb-4 md:mb-0">
-            <p className="text-xs sm:text-sm text-green-100">
-              © 2025 Dabba Nation. All rights reserved.
-            </p>
-            <div className="flex items-center text-green-200 group hover:text-white transition-colors duration-300">
-              <svg
-                className="w-4 h-4 mr-1.5 animate-pulse"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="text-xs sm:text-sm font-medium">
-                Made with love in Delhi
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center text-green-200 bg-green-600 px-4 py-2 rounded-full border border-green-500 shadow-md hover:shadow-lg hover:bg-green-500 transition-all duration-300 group">
-              <div className="w-2 h-2 bg-green-300 rounded-full mr-2 animate-pulse"></div>
-              <span className="text-xs sm:text-sm font-medium group-hover:text-white transition-colors duration-300">
-                Fresh & Available
-              </span>
-            </div>
+        {/* Bottom Bar - Centered on Mobile */}
+        <div className="bg-[#333333] rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between border-4 border-[#333333] gap-4">
+          <p className="text-white font-black text-[10px] sm:text-sm uppercase tracking-widest text-center md:text-left">
+            © 2026 DabbaNation • Made with{" "}
+            <Heart className="inline w-4 h-4 fill-[#FF8C42] text-[#FF8C42] mx-1" />{" "}
+            in Delhi
+          </p>
+          <div className="flex gap-6 sm:gap-8">
+            <a
+              href="#"
+              className="text-gray-400 text-[10px] sm:text-xs font-bold hover:text-white uppercase tracking-tighter transition-colors"
+            >
+              Privacy
+            </a>
+            <a
+              href="#"
+              className="text-gray-400 text-[10px] sm:text-xs font-bold hover:text-white uppercase tracking-tighter transition-colors"
+            >
+              Terms
+            </a>
           </div>
         </div>
       </div>

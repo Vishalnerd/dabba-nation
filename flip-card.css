@@ -1,0 +1,20 @@
+/* flip-card.css */
+
+.perspective {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  /* This tells the browser: "If this side is facing away from the user, don't show it" */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Ensure the rotation is smooth */
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}

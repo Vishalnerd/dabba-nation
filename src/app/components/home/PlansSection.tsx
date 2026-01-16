@@ -1,226 +1,112 @@
 "use client";
+import PlanFlipCard from "../ui/PlanFlipCard";
 
-import PlanCard from "./PlanCard";
-import { useEffect, useState } from "react";
+const plans = [
+  {
+    id: "trial",
+    title: "The Teaser",
+    subtitle: "Perfect for a taste test",
+    price: "99",
+    duration: "Day",
+    color: "#FFD166", // Yellow
+    features: ["1 Full Meal", "Fresh Phulkas", "Dessert Included"],
+    tag: "Newbie Friendly",
+    href: "/checkout?plan=trial",
+  },
+  {
+    id: "weekly",
+    title: "Weekly Warrior",
+    subtitle: "Stress-free work weeks",
+    price: "599",
+    duration: "Week",
+    color: "#A3D9A5", // Mint Green
+    features: [
+      "6 Days (Mon-Sat)",
+      "Free Delivery",
+      "Menu Variety",
+      "Skip Anytime",
+    ],
+    tag: "Most Popular",
+    href: "/checkout?plan=weekly",
+  },
+  {
+    id: "monthly",
+    title: "The Legend",
+    subtitle: "The ultimate peace of mind",
+    price: "2199",
+    duration: "Month",
+    color: "#FF8C42", // Orange
+    features: [
+      "24 Full Meals",
+      "Priority Delivery",
+      "Sunday Surprise Sweet",
+      "24/7 Support",
+    ],
+    tag: "Best Value",
+    href: "/checkout?plan=monthly",
+  },
+];
 
 export default function PlansSection() {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    const section = document.getElementById("plans");
-    if (section) {
-      observer.observe(section);
-    }
-
-    return () => {
-      if (section) {
-        observer.unobserve(section);
-      }
-    };
-  }, []);
-
   return (
     <section
       id="plans"
-      className="relative py-20 bg-gradient-to-br from-green-50 via-white to-green-50/50 overflow-hidden"
+      className="py-16 md:py-24 px-6 md:px-8 bg-[#F9F7F0] w-full overflow-hidden"
     >
-      {/* Animated background elements */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-green-100 rounded-full opacity-20 -translate-x-32 -translate-y-32 animate-pulse"></div>
-      <div className="absolute top-1/2 right-0 w-72 h-72 bg-green-200 rounded-full opacity-15 translate-x-24 animate-pulse delay-300"></div>
-      <div className="absolute bottom-0 left-1/3 w-48 h-48 bg-green-100 rounded-full opacity-25 translate-y-16 animate-bounce delay-700"></div>
-
-      {/* Floating decorative icons */}
-      <div className="absolute top-20 right-20 opacity-10 animate-float">
-        <svg
-          className="w-20 h-20 text-green-300"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-        </svg>
-      </div>
-
-      <div className="absolute bottom-32 left-10 opacity-10 animate-float delay-500">
-        <svg
-          className="w-16 h-16 text-green-400"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-          <path
-            fillRule="evenodd"
-            d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
-            clipRule="evenodd"
-          />
-        </svg>
-      </div>
-
-      <div
-        className={`relative z-10 max-w-7xl mx-auto px-6 text-center transition-all duration-1000 ${
-          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-        }`}
-      >
-        {/* Section badge */}
-        <div className="inline-flex items-center px-5 py-2.5 rounded-full bg-gradient-to-r from-green-100 to-green-50 text-green-800 text-sm font-semibold mb-6 shadow-sm border border-green-200/50 animate-fade-in">
-          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Affordable Meal Plans
+      <div className="max-w-6xl mx-auto w-full">
+        {/* Section Heading - Responsive Text Sizes */}
+        <div className="text-center mb-12 md:mb-20">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-[#333333] mb-4 leading-tight">
+            Pick Your <span className="text-[#FF8C42]">Dabba Plan</span>
+          </h2>
+          <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto font-medium">
+            No hidden fees. No long-term commitments.{" "}
+            <br className="hidden md:block" />
+            Switch or cancel your plan anytime!
+          </p>
         </div>
 
-        {/* Main heading */}
-        <h2 className="text-4xl md:text-5xl font-bold mb-4 animate-fade-in-up delay-100">
-          <span className="text-gray-800">Our </span>
-          <span className="text-green-700 relative inline-block">
-            Tiffin Plans
-            <svg
-              className="absolute -bottom-1 left-0 w-full h-2.5 text-green-200"
-              viewBox="0 0 100 8"
-              fill="currentColor"
-            >
-              <path d="M0 6c20 0 30-4 50-4s30 4 50 4v2H0z" />
-            </svg>
-          </span>
-        </h2>
-
-        <p className="text-xl text-gray-600 mb-6 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200">
-          Simple, homely, and budget-friendly meals delivered daily.
-        </p>
-
-        {/* Value proposition badges */}
-        <div className="flex flex-wrap justify-center gap-4 mb-16 animate-fade-in-up delay-300">
-          {[
-            "No Hidden Charges",
-            "Flexible Cancellation",
-            "Daily Fresh Meals",
-          ].map((text, index) => (
+        {/* Plans Grid - Handling Mobile, Tablet, and Desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-12 gap-x-6 lg:gap-x-8 items-stretch">
+          {plans.map((plan) => (
             <div
-              key={index}
-              className="flex items-center text-green-700 bg-white px-5 py-2.5 rounded-full shadow-md border border-green-100 hover:shadow-lg hover:scale-105 transition-all duration-300"
+              key={plan.id}
+              className={`relative group ${
+                // Center the third card on tablet screens (sm to lg)
+                plan.id === "monthly"
+                  ? "sm:col-span-2 lg:col-span-1 sm:max-w-md sm:mx-auto lg:w-full"
+                  : ""
+              }`}
             >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="text-sm font-semibold">{text}</span>
+              {/* Playful Tag - Adjusted for better visibility on small screens */}
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-30 bg-[#333333] text-white text-[10px] md:text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-[4px_4px_0px_rgba(0,0,0,0.2)] whitespace-nowrap border-2 border-white">
+                {plan.tag}
+              </div>
+
+              <PlanFlipCard
+                href={plan.href}
+                title={plan.title}
+                price={plan.price}
+                duration={plan.duration}
+                color={plan.color}
+                features={plan.features}
+                // Optional: pass a highlighted prop for the "Weekly" plan
+                highlighted={plan.id === "weekly"}
+              />
             </div>
           ))}
         </div>
 
-        {/* Plans grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10 max-w-6xl mx-auto mb-16">
-          <div className="animate-fade-in-up delay-400">
-            <PlanCard title="Monthly Tiffin" price={1950} planId="monthly" />
+        {/* Bottom Note */}
+        <div className="mt-16 text-center">
+          <div className="inline-block bg-white/50 border-2 border-dashed border-gray-300 rounded-2xl px-6 py-3">
+            <p className="text-sm text-gray-500 font-bold italic">
+              🍱 Need something bigger? Custom corporate/bulk plans available
+              upon request.
+            </p>
           </div>
-          <div className="md:-mt-6 animate-fade-in-up delay-500">
-            <PlanCard
-              title="Weekly Tiffin"
-              price={455}
-              planId="weekly"
-              isPopular={true}
-            />
-          </div>
-          <div className="animate-fade-in-up delay-600">
-            <PlanCard title="Trial Tiffin" price={70} planId="trial" />
-          </div>
-        </div>
-
-        {/* Bottom CTA Card */}
-        <div className="relative max-w-3xl mx-auto animate-fade-in-up delay-700">
-          {/* Glow effect */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-green-400 to-green-600 rounded-2xl opacity-20 blur-lg"></div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes fade-in-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-15px);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.8s ease-out;
-        }
-
-        .animate-fade-in-up {
-          animation: fade-in-up 0.8s ease-out;
-        }
-
-        .animate-float {
-          animation: float 4s ease-in-out infinite;
-        }
-
-        .delay-100 {
-          animation-delay: 100ms;
-        }
-
-        .delay-200 {
-          animation-delay: 200ms;
-        }
-
-        .delay-300 {
-          animation-delay: 300ms;
-        }
-
-        .delay-400 {
-          animation-delay: 400ms;
-        }
-
-        .delay-500 {
-          animation-delay: 500ms;
-        }
-
-        .delay-600 {
-          animation-delay: 600ms;
-        }
-
-        .delay-700 {
-          animation-delay: 700ms;
-        }
-      `}</style>
     </section>
   );
 }

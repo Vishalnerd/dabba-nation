@@ -2,29 +2,77 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
-:root {
-  --background: #ffffff;
-  --foreground: #000000;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --color-brand-orange: #ff8c42;
+  --color-brand-yellow: #ffd166;
+  --color-brand-mint: #a3d9a5;
+  --color-bg-cream: #f9f7f0;
+  --color-text-main: #333333;
+  --radius-playful: 24px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Comic Sans MS", cursive, sans-serif; /* Playful font choice */
+  background-color: var(--color-bg-cream);
+  color: var(--color-text-main);
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100vw;
+}
+
+.button-primary {
+  background-color: var(--color-brand-orange);
+  border-radius: var(--radius-playful);
+  color: white;
+  font-weight: bold;
+  padding: 12px 24px;
+  box-shadow: 0px 4px 0px #e86a33; /* Adds a 3D "pop" effect */
+}
+
+@keyframes bounce-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 4s ease-in-out infinite;
+}
+
+@keyframes toast-progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-toast-progress {
+  animation: toast-progress 4s linear forwards;
+}
+
+/* Optional: Add a bouncy entrance */
+@keyframes slide-in {
+  0% {
+    transform: translateX(100%) rotate(10deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation: slide-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }

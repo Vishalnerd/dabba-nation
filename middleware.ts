@@ -35,7 +35,7 @@ export function middleware(req: NextRequest) {
   );
   res.headers.set(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, x-admin-token, x-razorpay-signature"
+    "Content-Type, Authorization"
   );
 
   // Handle preflight OPTIONS requests
@@ -51,44 +51,6 @@ export function middleware(req: NextRequest) {
   res.headers.set("X-Frame-Options", "DENY");
   res.headers.set("X-XSS-Protection", "1; mode=block");
   res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-
-  // 🔐 WEBHOOK PROTECTION - Only Razorpay can access webhook
-  if (req.nextUrl.pathname === "/api/payments/webhook") {
-    const signature = req.headers.get("x-razorpay-signature");
-    const userAgent = req.headers.get("user-agent");
-
-    // Basic validation - webhook must have Razorpay signature
-    if (!signature) {
-      console.warn("⚠️ Webhook access without signature blocked");
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Optional: Check User-Agent contains "Razorpay"
-    if (userAgent && !userAgent.includes("Razorpay")) {
-      console.warn("⚠️ Suspicious webhook access blocked:", userAgent);
-    }
-  }
-
-  // 🚫 BLOCK ADMIN ROUTES FROM UNAUTHORIZED ORIGINS
-  if (req.nextUrl.pathname.startsWith("/api/admin")) {
-    // Allow same-origin requests (when origin matches the host)
-    const requestHost = req.headers.get("host");
-    const isSameOrigin = !origin || 
-                         origin === `https://${requestHost}` || 
-                         origin === `http://${requestHost}` ||
-                         allowedOrigins.includes(origin);
-    
-    if (!isSameOrigin) {
-      console.warn("⚠️ Admin API access from unauthorized origin:", origin, "Host:", requestHost);
-      return NextResponse.json(
-        { success: false, error: "Forbidden" },
-        { status: 403 }
-      );
-    }
-  }
 
   return res;
 }

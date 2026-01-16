@@ -8,6 +8,11 @@ import {
   checkSpamOrders,
   checkRateLimit,
 } from "@/lib/validations";
+import User from "@/models/User";
+import { 
+  hasActiveSubscription, 
+  calculateSubscriptionDates 
+} from "@/lib/subscriptionHelper";
 
 // Package prices
 const PACKAGE_PRICES: Record<string, number> = {
@@ -93,8 +98,34 @@ export async function POST(req: NextRequest) {
     // Generate unique orderId
     const orderId = "ORD-" + Date.now();
 
+    // Find or create user
+    const phone = customer.phone;
+    let user = await User.findOne({ phone }).select('_id phone name').lean();
+    if (!user) {
+      user = await User.create({
+        phone,
+        name: customer.fullName,
+      });
+    }
+
+    // 🚫 CRITICAL: Check if user already has an active subscription
+    const hasActive = await hasActiveSubscription(user._id.toString());
+    if (hasActive) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "You already have an active subscription. Please wait for it to expire or contact support to cancel.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Calculate subscription start and end dates
+    const { startDate, endDate } = calculateSubscriptionDates(selectedPackage);
+
     const newOrder = new Order({
       orderId,
+      user: user._id,
       package: selectedPackage,
       totalAmount,
       customer: {
@@ -104,7 +135,10 @@ export async function POST(req: NextRequest) {
         pincode: customer.pincode,
       },
       paymentStatus: "pending",
+      status: "placed",
       active: false, // 🔒 CRITICAL: Order inactive until payment confirmed
+      startDate,
+      endDate,
       meals: {
         breakfast: { delivered: false },
         lunch: { delivered: false },
