@@ -57,6 +57,8 @@ export default function HeroSection() {
             loop
             muted
             playsInline
+            disablePictureInPicture
+            controlsList="nodownload nofullscreen noremoteplayback"
             className=" h-auto drop-shadow-2xl transition-transform rounded-2xl"
           />
         </div>
