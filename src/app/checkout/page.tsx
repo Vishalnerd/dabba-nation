@@ -21,17 +21,31 @@ const PLANS = {
   },
 };
 
+// Helper to load the Razorpay SDK dynamically
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 function CheckoutContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const planKey = (searchParams.get("plan") as keyof typeof PLANS) || "weekly";
 
-  // 1. Calculate Date Range (Today to +4 Days)
+  // Calculate Date Range (Today to +4 Days)
   const { minDate, maxDate } = useMemo(() => {
     const today = new Date();
     const future = new Date();
     future.setDate(today.getDate() + 4);
-
     return {
       minDate: today.toISOString().split("T")[0],
       maxDate: future.toISOString().split("T")[0],
@@ -91,45 +105,125 @@ function CheckoutContent() {
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
+  // 🚀 RAZORPAY INTEGRATION HANDLING
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting || !validateForm()) return;
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/orders/create", {
+      // 1. Load Razorpay Script
+      const resScript = await loadRazorpayScript();
+      if (!resScript) {
+        setToast({
+          message: "Razorpay SDK failed to load. Check your connection.",
+          type: "error",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 2. Call your Backend API to create a Razorpay Order
+      const response = await fetch("/api/payments/razorpay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           planKey,
           plan,
           customer: {
-            fullName: formData.fullName, // matches your API expectation
+            fullName: formData.fullName,
             phone: formData.phone,
             address: formData.address,
             pincode: formData.pincode,
           },
-          startDate: formData.startDate, // matches your model
+          startDate: formData.startDate,
         }),
       });
 
       const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to initialize payment");
 
-      if (!response.ok) throw new Error(data.error || "Failed to place order");
+      // 3. Open Razorpay Modal
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: data.amount, // from backend (in paise)
+        currency: "INR",
+        name: "DabbaNation",
+        description: `${plan.title} Subscription`,
+        order_id: data.id, // Razorpay Order ID
+        handler: async function (response: any) {
+          try {
+            // 4. Verify Payment on Backend
+            const verifyRes = await fetch("/api/payments/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                internalOrderId: data.order.orderId, // Your DB Order ID
+              }),
+            });
 
-      setToast({ message: "Order Success! Redirecting...", type: "success" });
-      setTimeout(
-        () => router.push(`/order-confirmation?orderId=${data.orderId}`),
-        1500
-      );
+            const verifyData = await verifyRes.json();
+            if (!verifyRes.ok)
+              throw new Error(
+                verifyData.error || "Payment verification failed",
+              );
+
+            // 5. Success! Redirect
+            setToast({
+              message: "Payment Successful! Redirecting...",
+              type: "success",
+            });
+            setTimeout(
+              () =>
+                router.push(
+                  `/order-confirmation?orderId=${data.order.orderId}`,
+                ),
+              1500,
+            );
+          } catch (error: any) {
+            setToast({ message: error.message, type: "error" });
+            setIsSubmitting(false);
+          }
+        },
+        prefill: {
+          name: formData.fullName,
+          contact: formData.phone,
+        },
+        theme: {
+          color: "#FF8C42", // DabbaNation Brand Color
+        },
+        modal: {
+          ondismiss: function () {
+            setIsSubmitting(false);
+            setToast({ message: "Payment cancelled by user.", type: "error" });
+          },
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function () {
+        setToast({
+          message: "Payment Failed. Please try again.",
+          type: "error",
+        });
+        setIsSubmitting(false);
+      });
+      rzp.open();
     } catch (err: any) {
       setToast({ message: err.message, type: "error" });
       setIsSubmitting(false);
     }
   };
 
+  // ... (The entire `return` JSX block remains exactly the same as your code)
   return (
     <div className="min-h-screen bg-[#F9F7F0] pt-24 pb-12 px-4 md:px-6 font-sans">
+      {/* Toast, Plan Summary, and Form UI remains exactly as you had it */}
+      {/* I have kept it collapsed here for brevity, paste your UI code here */}
       {toast && (
         <Toast
           message={toast.message}
@@ -290,7 +384,7 @@ function CheckoutContent() {
                 disabled={isSubmitting}
                 className="w-full bg-[#FF8C42] text-white py-5 rounded-2xl font-black text-2xl shadow-[0px_8px_0px_#E86A33] active:translate-y-2 active:shadow-none transition-all border-2 border-[#333333] disabled:opacity-50"
               >
-                {isSubmitting ? "PLACING ORDER..." : "GET MY DABBA →"}
+                {isSubmitting ? "PROCESSING..." : "PAY SECURELY →"}
               </button>
             </form>
           </div>

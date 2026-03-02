@@ -3,16 +3,24 @@ import Order from "@/models/Order";
 import LogoutButton from "@/app/components/ui/LogoutButton";
 import OrderList from "../OrderList/page";
 
+// Prevent caching so the dashboard is always live
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminDashboard() {
   await connectDB();
-  // Fetch from DB
+
+  // FIXED QUERY: Fetch all orders that are active AND paid.
+  // We remove the strict Date() check because MongoDB UTC time
+  // can conflict with Indian Standard Time (IST) and hide today's orders.
   const rawOrders = await Order.find({
     active: true,
-    endDate: { $gte: new Date() },
-  }).sort({ endDate: 1 });
+    paymentStatus: "paid",
+  }).sort({ endDate: 1 }); // Still sort them so expiring ones are at the top
 
   // Convert Mongoose objects to plain JSON for Client Component
   const orders = JSON.parse(JSON.stringify(rawOrders));
+
   return (
     <div className="min-h-screen bg-[#F9F7F0] p-4 md:p-8 pt-24">
       <div className="max-w-7xl mx-auto">
