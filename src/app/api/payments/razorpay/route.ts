@@ -1,39 +1,39 @@
-// app/api/payments/razorpay/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import connectDB from "@/lib/db";
 import Order from "@/models/Order";
 import User from "@/models/User";
 
-// Initialize Razorpay
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
 export async function POST(req: NextRequest) {
   try {
+    // 1. Initialize Razorpay INSIDE the POST request
+    const razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID!,
+      key_secret: process.env.RAZORPAY_KEY_SECRET!,
+    });
+
     await connectDB();
     const body = await req.json();
     const { planKey, customer, startDate } = body;
 
-    // 1. Calculate Amount based on plan (in paise for Razorpay)
+    // 2. Calculate Amount based on plan (in paise for Razorpay)
     const amountInRupees = planKey === "monthly" ? 1950 : 455;
     const amountInPaise = amountInRupees * 100;
 
+    // 3. Generate your internal Order ID first
     const internalOrderId = "ORD-" + Date.now();
 
-    // 2. Create Razorpay Order
+    // 4. Create Razorpay Order
     const rzpOrder = await razorpay.orders.create({
       amount: amountInPaise,
       currency: "INR",
       receipt: internalOrderId,
       notes: {
-        internalOrderId: internalOrderId,
+        internalOrderId: internalOrderId // For the webhook!
       }
     });
 
-    // 3. Find or Create User
+    // 5. Find or Create User
     let user = await User.findOne({ phone: customer.phone });
     if (!user) {
       user = await User.create({
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 4. Calculate End Date based on the selected Start Date
+    // 6. Calculate End Date based on the selected Start Date
     const start = new Date(startDate);
     const end = new Date(startDate);
     if (planKey === "weekly") {
@@ -51,21 +51,21 @@ export async function POST(req: NextRequest) {
       end.setDate(start.getDate() + 30);
     }
 
-    // 5. Save "Pending" Order in Database
+    // 7. Save "Pending" Order in Database
     const dbOrder = await Order.create({
       orderId: internalOrderId,
       user: user._id,
       package: planKey,
       totalAmount: amountInRupees,
       customer: {
-        name: customer.fullName, // Model uses 'name'
+        name: customer.fullName, 
         phone: customer.phone,
         address: customer.address,
         pincode: customer.pincode,
       },
       paymentStatus: "pending",
       status: "placed",
-      active: false, // Remains false until payment is verified
+      active: false,
       startDate: start,
       endDate: end,
       meals: {
@@ -75,7 +75,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 6. Send the Razorpay Order ID back to the frontend
     return NextResponse.json({
       id: rzpOrder.id,
       amount: amountInPaise,
