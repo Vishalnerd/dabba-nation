@@ -1,6 +1,7 @@
 "use client";
 
 import { Heart, Instagram, Twitter, Phone, Mail, MapPin } from "lucide-react";
+import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -102,18 +103,18 @@ export default function Footer() {
             in Delhi
           </p>
           <div className="flex gap-6 sm:gap-8">
-            <a
-              href="#"
+            <Link
+              href="/components/privacy"
               className="text-gray-400 text-[10px] sm:text-xs font-bold hover:text-white uppercase tracking-tighter transition-colors"
             >
               Privacy
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="/components/terms"
               className="text-gray-400 text-[10px] sm:text-xs font-bold hover:text-white uppercase tracking-tighter transition-colors"
             >
               Terms
-            </a>
+            </Link>
           </div>
         </div>
       </div>
